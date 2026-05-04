@@ -126,7 +126,7 @@ export default async function AdminDealsPage({ searchParams }: PageProps) {
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-2">
                     <Link href={`/admin/deals/${deal.id}`} className="text-xs text-brand-blue hover:underline">Edit</Link>
-                    <Link href={`/deals/${deal.venue.id}/${deal.slug}`} className="text-xs text-text-muted hover:text-text-primary" target="_blank">View</Link>
+                    <Link href={`/deals/${deal.venue.slug}/${deal.slug}`} className="text-xs text-text-muted hover:text-text-primary" target="_blank">View</Link>
                   </div>
                 </td>
               </tr>

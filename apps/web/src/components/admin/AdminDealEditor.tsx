@@ -137,7 +137,7 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
         <div>
           <h1 className="text-xl font-bold text-text-primary">{isNew ? 'Add New Deal' : 'Edit Deal'}</h1>
           {deal && (
-            <Link href={`/deals/${deal.venue.slug}/${deal.id}`} target="_blank" className="text-xs text-brand-blue hover:underline flex items-center gap-1 mt-0.5">
+            <Link href={`/deals/${deal.venue.slug}/${deal.slug}`} target="_blank" className="text-xs text-brand-blue hover:underline flex items-center gap-1 mt-0.5">
               View live <ExternalLink className="h-3 w-3" />
             </Link>
           )}
