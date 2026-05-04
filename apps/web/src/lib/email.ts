@@ -2,7 +2,9 @@ import { Resend } from 'resend'
 import { prisma } from '@grspecials/db'
 import { env } from './env'
 
-const resend = new Resend(env.RESEND_API_KEY)
+function getResend() {
+  return new Resend(env.RESEND_API_KEY ?? 'missing')
+}
 
 async function getTemplate(slug: string): Promise<{ subject: string; html: string; text: string } | null> {
   const tpl = await prisma.emailTemplate.findUnique({ where: { slug } })
@@ -33,7 +35,7 @@ export async function sendEmail({
     return
   }
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: env.EMAIL_FROM,
     to,
     subject: renderTemplate(tpl.subject, vars),
