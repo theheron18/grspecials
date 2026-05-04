@@ -1,6 +1,5 @@
-import type { NextConfig } from 'next'
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   transpilePackages: ['@grspecials/db', '@grspecials/types'],
 
   images: {
@@ -12,7 +11,6 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
 
-  // Redirect /admin root to dashboard
   async redirects() {
     return [
       {
@@ -23,7 +21,6 @@ const nextConfig: NextConfig = {
     ]
   },
 
-  // Security headers
   async headers() {
     return [
       {
