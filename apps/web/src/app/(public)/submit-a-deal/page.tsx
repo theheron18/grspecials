@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { prisma } from '@grspecials/db'
 import { SubmitDealForm } from '@/components/forms/SubmitDealForm'
 import { buildMeta } from '@/lib/seo'
