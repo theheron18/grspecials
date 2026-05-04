@@ -111,7 +111,7 @@ export default async function DealDetailPage({ params }: PageProps) {
                 </div>
                 {deal.photos.length > 1 && (
                   <div className="flex gap-2 p-2 bg-white border-t border-surface-border overflow-x-auto scrollbar-hide">
-                    {deal.photos.slice(1).map((photo, i) => (
+                    {deal.photos.slice(1).map((photo: { url: string; altText: string | null }, i) => (
                       <div key={i} className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md">
                         <Image src={photo.url} alt={photo.altText ?? ''} fill className="object-cover" />
                       </div>
