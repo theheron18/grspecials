@@ -1,0 +1,31 @@
+{
+  "name": "@grspecials/scraper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "run:once": "tsx src/index.ts --once",
+    "test": "vitest run",
+    "clean": "rm -rf dist node_modules"
+  },
+  "dependencies": {
+    "@grspecials/db": "*",
+    "openai": "^4.47.3",
+    "playwright": "^1.44.0",
+    "p-limit": "^5.0.0",
+    "p-retry": "^6.2.0",
+    "date-fns": "^3.6.0",
+    "zod": "^3.23.6",
+    "axios": "^1.7.2",
+    "cheerio": "^1.0.0-rc.12"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "tsx": "^4.11.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}

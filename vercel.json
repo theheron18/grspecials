@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd ../.. && npm run build --filter=@grspecials/web",
+  "outputDirectory": "apps/web/.next",
+  "installCommand": "npm ci",
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/expire-deals",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}

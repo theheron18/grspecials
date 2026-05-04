@@ -1,0 +1,507 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  VENUE_OWNER
+  USER
+}
+
+enum DealStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  REJECTED
+  EXPIRED
+  ARCHIVED
+}
+
+enum DealSource {
+  ADMIN_POSTED
+  COMMUNITY_SUBMITTED
+  VENUE_SUBMITTED
+  AUTO_SCRAPED
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CHANGES_REQUESTED
+}
+
+enum ScraperSourceType {
+  FACEBOOK_PAGE
+  INSTAGRAM_ACCOUNT
+  WEBSITE_URL
+}
+
+enum ScraperRunStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+  PARTIAL
+}
+
+enum NotificationChannel {
+  EMAIL
+  PUSH
+}
+
+enum NotificationStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  FAILED
+}
+
+enum VenueStatus {
+  ACTIVE
+  INACTIVE
+  PENDING_VERIFICATION
+}
+
+// ─── Users & Auth ─────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  role          UserRole  @default(USER)
+  passwordHash  String?
+
+  accounts Account[]
+  sessions Session[]
+
+  savedDeals   SavedDeal[]
+  preferences  UserPreference?
+  pushTokens   PushToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model UserPreference {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  emailDigest       Boolean  @default(true)
+  pushEnabled       Boolean  @default(false)
+  categoryIds       String[] @default([])
+  neighborhoodIds   String[] @default([])
+  digestDayOfWeek   Int      @default(1)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model PushToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  platform  String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_tokens")
+}
+
+// ─── Venue / Business ─────────────────────────────────────────────────────────
+
+model Venue {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+  description String?     @db.Text
+  address     String
+  city        String      @default("Grand Rapids")
+  state       String      @default("MI")
+  zip         String?
+  phone       String?
+  website     String?
+  email       String?
+
+  latitude    Float?
+  longitude   Float?
+  neighborhood String?
+
+  logoUrl     String?
+  coverUrl    String?
+
+  status      VenueStatus @default(ACTIVE)
+  verified    Boolean     @default(false)
+  premium     Boolean     @default(false)
+  premiumUntil DateTime?
+
+  portalToken String      @unique @default(cuid())
+  portalActive Boolean    @default(true)
+  autoApprove Boolean     @default(false)
+
+  categoryId  String
+  category    VenueCategory @relation(fields: [categoryId], references: [id])
+
+  deals       Deal[]
+  photos      VenuePhoto[]
+  scraperSources ScraperSource[]
+
+  metaTitle       String?
+  metaDescription String?
+  ogImageUrl      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([neighborhood])
+  @@index([latitude, longitude])
+  @@map("venues")
+}
+
+model VenueCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  icon        String?
+  color       String?
+  description String?
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+
+  metaTitle       String?
+  metaDescription String?
+
+  venues Venue[]
+  deals  Deal[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("venue_categories")
+}
+
+model VenuePhoto {
+  id        String   @id @default(cuid())
+  venueId   String
+  url       String
+  altText   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@map("venue_photos")
+}
+
+// ─── Deals ────────────────────────────────────────────────────────────────────
+
+model Deal {
+  id          String     @id @default(cuid())
+  title       String
+  slug        String     @unique
+  description String     @db.Text
+  shortDesc   String?
+
+  venueId     String
+  venue       Venue @relation(fields: [venueId], references: [id])
+
+  categoryId  String
+  category    VenueCategory @relation(fields: [categoryId], references: [id])
+
+  dealTypeId  String
+  dealType    DealType @relation(fields: [dealTypeId], references: [id])
+
+  neighborhoodId String?
+  neighborhood   Neighborhood? @relation(fields: [neighborhoodId], references: [id])
+
+  status      DealStatus  @default(PENDING_REVIEW)
+  source      DealSource  @default(ADMIN_POSTED)
+  featured    Boolean     @default(false)
+  featuredUntil DateTime?
+
+  startDate   DateTime?
+  endDate     DateTime?
+  activeDays  Int[]       @default([0, 1, 2, 3, 4, 5, 6])
+  startTime   String?
+  endTime     String?
+
+  originalPrice Float?
+  discountedPrice Float?
+  discountPercent Int?
+  priceNote   String?
+
+  photos      DealPhoto[]
+  savedBy     SavedDeal[]
+  views       Int         @default(0)
+  clicks      Int         @default(0)
+
+  submitterName  String?
+  submitterEmail String?
+  adminNotes     String?   @db.Text
+
+  metaTitle       String?
+  metaDescription String?
+  ogImageUrl      String?
+
+  expiryNotificationSent Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([venueId])
+  @@index([categoryId])
+  @@index([dealTypeId])
+  @@index([status])
+  @@index([featured])
+  @@index([endDate])
+  @@index([createdAt(sort: Desc)])
+  @@map("deals")
+}
+
+model DealType {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?
+  color       String?
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+
+  metaTitle       String?
+  metaDescription String?
+
+  deals Deal[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("deal_types")
+}
+
+model DealPhoto {
+  id        String   @id @default(cuid())
+  dealId    String
+  url       String
+  altText   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@map("deal_photos")
+}
+
+model SavedDeal {
+  id        String   @id @default(cuid())
+  userId    String
+  dealId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dealId])
+  @@map("saved_deals")
+}
+
+// ─── Taxonomy ─────────────────────────────────────────────────────────────────
+
+model Neighborhood {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+
+  deals Deal[]
+
+  createdAt DateTime @default(now())
+
+  @@map("neighborhoods")
+}
+
+// ─── Scraper ──────────────────────────────────────────────────────────────────
+
+model ScraperSource {
+  id          String            @id @default(cuid())
+  type        ScraperSourceType
+  url         String
+  handle      String?
+  venueId     String?
+  venue       Venue?            @relation(fields: [venueId], references: [id])
+
+  active      Boolean           @default(true)
+  frequency   String            @default("daily")
+  lastRunAt   DateTime?
+  nextRunAt   DateTime?
+
+  runs        ScraperRun[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+  @@index([active])
+  @@index([nextRunAt])
+  @@map("scraper_sources")
+}
+
+model ScraperRun {
+  id         String           @id @default(cuid())
+  sourceId   String
+  source     ScraperSource    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  status     ScraperRunStatus
+  startedAt  DateTime         @default(now())
+  finishedAt DateTime?
+  itemsFound Int              @default(0)
+  itemsQueued Int             @default(0)
+  errorMessage String?        @db.Text
+  logOutput  String?          @db.Text
+
+  @@index([sourceId])
+  @@index([startedAt(sort: Desc)])
+  @@map("scraper_runs")
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+model Notification {
+  id          String              @id @default(cuid())
+  title       String
+  body        String              @db.Text
+  channel     NotificationChannel
+  status      NotificationStatus  @default(DRAFT)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+
+  targetCategoryIds    String[] @default([])
+  targetNeighborhoodIds String[] @default([])
+
+  recipientCount Int @default(0)
+  openCount      Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([scheduledAt])
+  @@map("notifications")
+}
+
+// ─── Site Config ──────────────────────────────────────────────────────────────
+
+model SiteConfig {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String @db.Text
+
+  updatedAt DateTime @updatedAt
+
+  @@map("site_config")
+}
+
+model EmailTemplate {
+  id      String @id @default(cuid())
+  slug    String @unique
+  name    String
+  subject String
+  html    String @db.Text
+  text    String @db.Text
+
+  updatedAt DateTime @updatedAt
+
+  @@map("email_templates")
+}
+
+model FeaturedSlot {
+  id          String   @id @default(cuid())
+  name        String
+  location    String
+  maxItems    Int      @default(3)
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("featured_slots")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+  @@map("audit_logs")
+}
