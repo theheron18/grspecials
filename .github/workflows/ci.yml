@@ -24,9 +24,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Generate Prisma client
-        run: npm run db:generate
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/grspecials_test
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/grspecials_test
@@ -73,9 +70,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate Prisma client
-        run: npm run db:generate
-
       - name: Push DB schema
         run: npm run db:push
         working-directory: packages/db
@@ -104,9 +98,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Generate Prisma client
-        run: npm run db:generate
 
       - name: Build all packages
         run: npm run build
