@@ -9,6 +9,9 @@ import { Input, Textarea, Select } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Trash2, Copy, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
+import { ImageUpload } from '@/components/ui/ImageUpload'
+import Image from 'next/image'
+import React from 'react'
 
 const schema = z.object({
   name: z.string().min(2),
@@ -41,7 +44,7 @@ interface Venue {
   phone?: string | null; website?: string | null; email?: string | null
   latitude?: number | null; longitude?: number | null; neighborhood?: string | null
   categoryId: string; status: string; verified: boolean; premium: boolean; autoApprove: boolean
-  portalToken: string; metaTitle?: string | null; metaDescription?: string | null
+  portalToken: string; logoUrl?: string | null; metaTitle?: string | null; metaDescription?: string | null
   _count: { deals: number }
 }
 
@@ -57,6 +60,7 @@ export function AdminVenueEditor({ venue, categories, isNew }: Props) {
   const updateVenue = trpc.venues.update.useMutation()
   const deleteVenue = trpc.venues.delete.useMutation()
   const regenToken = trpc.venues.regeneratePortalToken.useMutation()
+  const [logoUrl, setLogoUrl] = React.useState(venue?.logoUrl ?? '')
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -96,7 +100,7 @@ export function AdminVenueEditor({ venue, categories, isNew }: Props) {
       const created = await createVenue.mutateAsync(payload)
       router.push(`/admin/venues/${created.id}`)
     } else {
-      await updateVenue.mutateAsync({ id: venue!.id, ...payload })
+      await updateVenue.mutateAsync({ id: venue!.id, ...payload, logoUrl: logoUrl || null })
       router.refresh()
     }
   }
@@ -200,6 +204,21 @@ export function AdminVenueEditor({ venue, categories, isNew }: Props) {
             </label>
           </div>
         </Section>
+
+        {!isNew && (
+          <Section title="Logo">
+            {logoUrl && (
+              <div className="flex items-center gap-3">
+                <div className="relative h-16 w-16 rounded-lg overflow-hidden border border-surface-border">
+                  <Image src={logoUrl} alt="Venue logo" fill className="object-contain p-1" />
+                </div>
+                <button type="button" onClick={() => setLogoUrl('')} className="text-xs text-red-500 hover:underline">Remove</button>
+              </div>
+            )}
+            <ImageUpload folder="venues" label={logoUrl ? 'Replace Logo' : 'Upload Logo'} onUploaded={setLogoUrl} />
+            <p className="text-xs text-text-muted">Shown on deal cards and the venue profile. Square images work best.</p>
+          </Section>
+        )}
 
         <Section title="SEO">
           <Input label="Meta Title" {...register('metaTitle')} />

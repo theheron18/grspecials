@@ -150,6 +150,7 @@ export const venuesRouter = router({
         premiumUntil: z.date().optional().nullable(),
         status: z.nativeEnum(VenueStatus).optional(),
         autoApprove: z.boolean().optional(),
+        logoUrl: z.string().url().optional().nullable(),
         metaTitle: z.string().optional().nullable(),
         metaDescription: z.string().optional().nullable(),
       }),

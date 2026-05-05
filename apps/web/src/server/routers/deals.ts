@@ -315,6 +315,21 @@ export const dealsRouter = router({
       })
     }),
 
+  addPhoto: adminProcedure
+    .input(z.object({ dealId: z.string(), url: z.string().url(), altText: z.string().optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const count = await ctx.prisma.dealPhoto.count({ where: { dealId: input.dealId } })
+      return ctx.prisma.dealPhoto.create({
+        data: { dealId: input.dealId, url: input.url, altText: input.altText, sortOrder: count },
+      })
+    }),
+
+  removePhoto: adminProcedure
+    .input(z.object({ photoId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.prisma.dealPhoto.delete({ where: { id: input.photoId } })
+    }),
+
   delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
