@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { Input, Textarea, Select } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { DAY_NAMES_FULL, formatActiveDays, formatDealHours } from '@/lib/utils'
-import { Plus, Eye, Edit2, CheckCircle } from 'lucide-react'
+import { Plus, Eye, MousePointerClick, Edit2, CheckCircle } from 'lucide-react'
 import Image from 'next/image'
 
 interface DealType { id: string; name: string; slug: string; icon?: string | null }
@@ -257,32 +257,68 @@ export function VenuePortal({ venue, dealTypes, token }: VenuePortalProps) {
             <h2 className="text-lg font-bold text-text-primary">Deal Performance</h2>
             {venue.deals.length === 0 ? (
               <p className="text-text-secondary text-sm">No deals yet — add one to start tracking stats.</p>
-            ) : (
-              <div className="rounded-card border border-surface-border overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-surface-bg border-b border-surface-border">
-                    <tr>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary">Deal</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-text-secondary">Status</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-text-secondary">Views</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-text-secondary">Clicks</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-surface-border">
-                    {venue.deals.map((deal) => (
-                      <tr key={deal.id} className="hover:bg-surface-bg">
-                        <td className="px-4 py-3 font-medium text-text-primary max-w-xs truncate">{deal.title}</td>
-                        <td className="px-4 py-3 text-right">
-                          <Badge color={deal.status === 'ACTIVE' ? '#059669' : '#6B7280'} size="sm">{deal.status}</Badge>
-                        </td>
-                        <td className="px-4 py-3 text-right text-text-secondary">{deal.views}</td>
-                        <td className="px-4 py-3 text-right text-text-secondary">{deal.clicks}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            ) : (() => {
+              const totalViews = venue.deals.reduce((s, d) => s + d.views, 0)
+              const totalClicks = venue.deals.reduce((s, d) => s + d.clicks, 0)
+              const overallRate = totalViews > 0 ? ((totalClicks / totalViews) * 100).toFixed(1) : '—'
+              return (
+                <>
+                  {/* Summary cards */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="rounded-card border border-surface-border bg-white p-4 text-center">
+                      <p className="text-2xl font-bold text-text-primary">{totalViews.toLocaleString()}</p>
+                      <p className="text-xs text-text-muted mt-0.5">Total Views</p>
+                    </div>
+                    <div className="rounded-card border border-surface-border bg-white p-4 text-center">
+                      <p className="text-2xl font-bold text-text-primary">{totalClicks.toLocaleString()}</p>
+                      <p className="text-xs text-text-muted mt-0.5">Website Clicks</p>
+                    </div>
+                    <div className="rounded-card border border-surface-border bg-white p-4 text-center">
+                      <p className="text-2xl font-bold text-brand-blue">{overallRate}{overallRate !== '—' ? '%' : ''}</p>
+                      <p className="text-xs text-text-muted mt-0.5">Click Rate</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-card border border-surface-border overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-surface-bg border-b border-surface-border">
+                        <tr>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary">Deal</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-text-secondary">Status</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-text-secondary">Views</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-text-secondary">Clicks</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-text-secondary">Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-surface-border">
+                        {venue.deals.map((deal) => {
+                          const rate = deal.views > 0 ? ((deal.clicks / deal.views) * 100).toFixed(1) + '%' : '—'
+                          return (
+                            <tr key={deal.id} className="hover:bg-surface-bg">
+                              <td className="px-4 py-3 font-medium text-text-primary max-w-xs truncate">{deal.title}</td>
+                              <td className="px-4 py-3 text-right">
+                                <Badge color={deal.status === 'ACTIVE' ? '#059669' : '#6B7280'} size="sm">{deal.status}</Badge>
+                              </td>
+                              <td className="px-4 py-3 text-right text-text-secondary">{deal.views.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-right text-text-secondary">{deal.clicks.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-right text-text-muted">{rate}</td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                      <tfoot className="border-t-2 border-surface-border bg-surface-bg">
+                        <tr>
+                          <td className="px-4 py-3 text-xs font-semibold text-text-secondary" colSpan={2}>Total</td>
+                          <td className="px-4 py-3 text-right text-xs font-semibold text-text-primary">{totalViews.toLocaleString()}</td>
+                          <td className="px-4 py-3 text-right text-xs font-semibold text-text-primary">{totalClicks.toLocaleString()}</td>
+                          <td className="px-4 py-3 text-right text-xs font-semibold text-brand-blue">{overallRate}{overallRate !== '—' ? '%' : ''}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </>
+              )
+            })()}
           </div>
         )}
       </div>
@@ -317,6 +353,11 @@ function DealRow({ deal }: { deal: Deal }) {
         <div className="flex items-center gap-1 text-xs text-text-muted">
           <Eye className="h-3 w-3" /> {deal.views}
         </div>
+        {deal.clicks > 0 && (
+          <div className="flex items-center gap-1 text-xs text-text-muted">
+            <MousePointerClick className="h-3 w-3" /> {deal.clicks}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -121,6 +121,15 @@ export const dealsRouter = router({
       return deal
     }),
 
+  trackClick: publicProcedure
+    .input(z.object({ dealId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.prisma.deal.update({
+        where: { id: input.dealId },
+        data: { clicks: { increment: 1 } },
+      })
+    }),
+
   featured: publicProcedure
     .input(z.object({ limit: z.number().int().min(1).max(12).default(6) }))
     .query(async ({ ctx, input }) => {

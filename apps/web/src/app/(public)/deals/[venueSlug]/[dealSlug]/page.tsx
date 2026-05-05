@@ -5,8 +5,9 @@ import { prisma } from '@grspecials/db'
 import { buildMeta, dealJsonLd, breadcrumbJsonLd } from '@/lib/seo'
 import { Badge, SourceBadge, FeaturedBadge } from '@/components/ui/Badge'
 import { formatActiveDays, formatDealHours, getExpiryLabel } from '@/lib/utils'
-import { MapPin, Clock, Calendar, Phone, Globe, ChevronRight, ExternalLink } from 'lucide-react'
+import { MapPin, Clock, Calendar, Phone, ChevronRight } from 'lucide-react'
 import { ShareSection } from './ShareSection'
+import { ClickTracker } from './ClickTracker'
 import type { Metadata } from 'next'
 
 interface PageProps {
@@ -226,10 +227,7 @@ export default async function DealDetailPage({ params }: PageProps) {
                   </a>
                 )}
                 {deal.venue.website && (
-                  <a href={deal.venue.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-brand-blue hover:underline">
-                    <Globe className="h-4 w-4" />
-                    Visit website <ExternalLink className="h-3 w-3" />
-                  </a>
+                  <ClickTracker dealId={deal.id} website={deal.venue.website} />
                 )}
               </div>
 
