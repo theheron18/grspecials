@@ -39,6 +39,26 @@ export const submissionsRouter = router({
       })
 
       if (!venue) {
+        let latitude: number | undefined
+        let longitude: number | undefined
+
+        const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+        if (mapboxToken) {
+          try {
+            const geoRes = await fetch(
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(input.venueAddress)}.json?access_token=${mapboxToken}&country=US&proximity=-85.6681,42.9634&limit=1`,
+            )
+            const geoJson = await geoRes.json() as { features?: { center: [number, number] }[] }
+            const coords = geoJson.features?.[0]?.center
+            if (coords) {
+              longitude = coords[0]
+              latitude = coords[1]
+            }
+          } catch {
+            // Geocoding failed — venue will appear on list but not map until admin adds coords
+          }
+        }
+
         venue = await ctx.prisma.venue.create({
           data: {
             name: input.venueName,
@@ -46,6 +66,8 @@ export const submissionsRouter = router({
             address: input.venueAddress,
             categoryId: category.id,
             status: 'PENDING_VERIFICATION',
+            latitude,
+            longitude,
           },
         })
       }
