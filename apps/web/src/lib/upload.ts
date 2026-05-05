@@ -1,10 +1,7 @@
 import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3'
 import { env } from './env'
 import { randomUUID } from 'crypto'
-
-export const UPLOAD_MAX_BYTES = 4 * 1024 * 1024 // 4 MB
-export const UPLOAD_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const
-export const UPLOAD_HINT = 'Max 4 MB · JPG, PNG, WebP, GIF'
+export { UPLOAD_MAX_BYTES, UPLOAD_ALLOWED_TYPES, UPLOAD_HINT } from './upload-config'
 
 function getS3() {
   if (!env.R2_ACCOUNT_ID) return null

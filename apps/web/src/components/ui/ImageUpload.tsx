@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import { Upload, X, Loader2 } from 'lucide-react'
 import Image from 'next/image'
-import { UPLOAD_HINT, UPLOAD_MAX_BYTES, UPLOAD_ALLOWED_TYPES } from '@/lib/upload'
+import { UPLOAD_HINT, UPLOAD_MAX_BYTES, UPLOAD_ALLOWED_TYPES } from '@/lib/upload-config'
 
 interface Props {
   folder: 'deals' | 'venues'
