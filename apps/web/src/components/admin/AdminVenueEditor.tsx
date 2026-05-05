@@ -61,8 +61,9 @@ export function AdminVenueEditor({ venue, categories, isNew }: Props) {
   const deleteVenue = trpc.venues.delete.useMutation()
   const regenToken = trpc.venues.regeneratePortalToken.useMutation()
   const [logoUrl, setLogoUrl] = React.useState(venue?.logoUrl ?? '')
+  const [geocoding, setGeocoding] = React.useState<'idle' | 'loading' | 'error'>('idle')
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  const { register, handleSubmit, getValues, setValue, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: venue?.name ?? '',
@@ -86,6 +87,27 @@ export function AdminVenueEditor({ venue, categories, isNew }: Props) {
       metaDescription: venue?.metaDescription ?? '',
     },
   })
+
+  async function handleLookupCoordinates() {
+    const { address, city, state, zip } = getValues()
+    const query = [address, city, state, zip].filter(Boolean).join(', ')
+    if (!query) return
+    setGeocoding('loading')
+    try {
+      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+      const res = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&country=us&limit=1`
+      )
+      const data = await res.json()
+      const [lng, lat] = data.features?.[0]?.center ?? []
+      if (lat == null || lng == null) { setGeocoding('error'); return }
+      setValue('latitude', lat.toFixed(6))
+      setValue('longitude', lng.toFixed(6))
+      setGeocoding('idle')
+    } catch {
+      setGeocoding('error')
+    }
+  }
 
   async function onSubmit(data: FormValues) {
     const payload = {
@@ -175,6 +197,20 @@ export function AdminVenueEditor({ venue, categories, isNew }: Props) {
           <div className="grid grid-cols-2 gap-3">
             <Input label="Latitude" type="number" step="any" placeholder="42.9634" {...register('latitude')} />
             <Input label="Longitude" type="number" step="any" placeholder="-85.6681" {...register('longitude')} />
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleLookupCoordinates}
+              disabled={geocoding === 'loading'}
+              className="flex items-center gap-1.5 text-xs text-brand-blue hover:underline disabled:opacity-50"
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              {geocoding === 'loading' ? 'Looking up…' : 'Look up coordinates from address'}
+            </button>
+            {geocoding === 'error' && (
+              <span className="text-xs text-brand-red">Address not found — try a full street address.</span>
+            )}
           </div>
         </Section>
 

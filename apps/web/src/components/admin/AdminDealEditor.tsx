@@ -8,7 +8,7 @@ import { trpc } from '@/lib/trpc/client'
 import { Input, Textarea, Select } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { DAY_NAMES_FULL } from '@/lib/utils'
-import { Trash2, ExternalLink } from 'lucide-react'
+import { Trash2, ExternalLink, Copy } from 'lucide-react'
 import Link from 'next/link'
 import { ImageUpload, PhotoGrid, PendingPhotoGrid } from '@/components/ui/ImageUpload'
 
@@ -63,6 +63,7 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
   const createDeal = trpc.deals.create.useMutation()
   const updateDeal = trpc.deals.update.useMutation()
   const deleteDeal = trpc.deals.delete.useMutation()
+  const duplicateDeal = trpc.deals.duplicate.useMutation()
   const addPhoto = trpc.deals.addPhoto.useMutation()
   const removePhoto = trpc.deals.removePhoto.useMutation()
   const [photos, setPhotos] = React.useState(deal?.photos ?? [])
@@ -134,6 +135,12 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
     router.push('/admin/deals')
   }
 
+  async function handleDuplicate() {
+    if (!deal) return
+    const copy = await duplicateDeal.mutateAsync({ id: deal.id })
+    router.push(`/admin/deals/${copy.id}`)
+  }
+
   const [venues, setVenues] = React.useState<Venue[]>(deal?.venue ? [deal.venue] : [])
   const [venueSearch, setVenueSearch] = React.useState(deal?.venue?.name ?? '')
 
@@ -149,10 +156,16 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
           )}
         </div>
         {!isNew && (
-          <Button variant="danger" size="sm" icon={<Trash2 className="h-3.5 w-3.5" />} onClick={handleDelete}
-            loading={deleteDeal.isPending}>
-            Delete
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="secondary" size="sm" icon={<Copy className="h-3.5 w-3.5" />} onClick={handleDuplicate}
+              loading={duplicateDeal.isPending}>
+              Duplicate
+            </Button>
+            <Button variant="danger" size="sm" icon={<Trash2 className="h-3.5 w-3.5" />} onClick={handleDelete}
+              loading={deleteDeal.isPending}>
+              Delete
+            </Button>
+          </div>
         )}
       </div>
 

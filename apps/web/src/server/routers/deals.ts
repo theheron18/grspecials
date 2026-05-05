@@ -330,6 +330,36 @@ export const dealsRouter = router({
       return ctx.prisma.dealPhoto.delete({ where: { id: input.photoId } })
     }),
 
+  duplicate: adminProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const original = await ctx.prisma.deal.findUniqueOrThrow({
+        where: { id: input.id },
+        include: { photos: { orderBy: { sortOrder: 'asc' } } },
+      })
+      const {
+        id, slug, createdAt, updatedAt, views, clicks,
+        photos, submitterName, submitterEmail, adminNotes,
+        ogImageUrl, expiryNotificationSent,
+        ...data
+      } = original
+      return ctx.prisma.deal.create({
+        data: {
+          ...data,
+          title: `Copy of ${original.title}`,
+          slug: `${slugify(original.title)}-copy-${Date.now()}`,
+          status: DealStatus.DRAFT,
+          featured: false,
+          views: 0,
+          clicks: 0,
+          expiryNotificationSent: false,
+          photos: photos.length
+            ? { create: photos.map(({ url, altText, sortOrder }) => ({ url, altText, sortOrder })) }
+            : undefined,
+        },
+      })
+    }),
+
   delete: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {

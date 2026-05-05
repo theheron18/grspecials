@@ -10,7 +10,6 @@ import { buildMeta } from '@/lib/seo'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = buildMeta()
-export const revalidate = 300 // ISR: revalidate every 5 minutes
 
 async function getHomepageData() {
   const [featured, recent, categories, config] = await Promise.all([
