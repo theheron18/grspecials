@@ -1,25 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { getUploadUrl } from '@/lib/upload'
-import { z } from 'zod'
+import { getToken } from 'next-auth/jwt'
+import { directUpload, UPLOAD_MAX_BYTES, UPLOAD_ALLOWED_TYPES } from '@/lib/upload'
 
-const schema = z.object({
-  folder: z.enum(['deals', 'venues']),
-  contentType: z.string(),
-  ext: z.string().regex(/^[a-z0-9]+$/i),
-})
+export const config = { api: { bodyParser: false } }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await req.json()
-  const parsed = schema.safeParse(body)
-  if (!parsed.success) return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
+  const formData = await req.formData()
+  const file = formData.get('file') as File | null
+  const folder = formData.get('folder') as string
 
-  const result = await getUploadUrl(parsed.data.folder, parsed.data.contentType, parsed.data.ext)
-  if (!result) return NextResponse.json({ error: 'Storage not configured' }, { status: 503 })
+  if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+  if (!['deals', 'venues'].includes(folder)) return NextResponse.json({ error: 'Invalid folder' }, { status: 400 })
+  if (!(UPLOAD_ALLOWED_TYPES as readonly string[]).includes(file.type))
+    return NextResponse.json({ error: 'Only JPG, PNG, WebP and GIF images are allowed' }, { status: 400 })
+  if (file.size > UPLOAD_MAX_BYTES)
+    return NextResponse.json({ error: 'File exceeds the 4 MB limit' }, { status: 400 })
 
-  return NextResponse.json(result)
+  const buffer = Buffer.from(await file.arrayBuffer())
+  const ext = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') ?? 'jpg'
+  const publicUrl = await directUpload(folder as 'deals' | 'venues', buffer, file.type, ext)
+
+  if (!publicUrl) return NextResponse.json({ error: 'Image storage is not configured' }, { status: 503 })
+  return NextResponse.json({ publicUrl })
 }

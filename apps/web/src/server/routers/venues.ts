@@ -120,6 +120,7 @@ export const venuesRouter = router({
         longitude: z.number().optional(),
         neighborhood: z.string().optional(),
         categoryId: z.string(),
+        logoUrl: z.string().url().optional(),
         verified: z.boolean().optional().default(false),
         premium: z.boolean().optional().default(false),
       }),

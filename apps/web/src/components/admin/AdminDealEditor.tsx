@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/Button'
 import { DAY_NAMES_FULL } from '@/lib/utils'
 import { Trash2, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
-import { ImageUpload, PhotoGrid } from '@/components/ui/ImageUpload'
+import { ImageUpload, PhotoGrid, PendingPhotoGrid } from '@/components/ui/ImageUpload'
 
 const schema = z.object({
   title: z.string().min(3),
@@ -66,6 +66,7 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
   const addPhoto = trpc.deals.addPhoto.useMutation()
   const removePhoto = trpc.deals.removePhoto.useMutation()
   const [photos, setPhotos] = React.useState(deal?.photos ?? [])
+  const [pendingPhotoUrls, setPendingPhotoUrls] = React.useState<string[]>([])
 
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting, isDirty } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -106,6 +107,7 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
         ...data,
         startDate: data.startDate ? new Date(data.startDate) : undefined,
         endDate: data.endDate ? new Date(data.endDate) : undefined,
+        photoUrls: pendingPhotoUrls.length ? pendingPhotoUrls : undefined,
       })
       router.push(`/admin/deals/${created.id}`)
     } else {
@@ -259,26 +261,41 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
         </Section>
 
         {/* Photos */}
-        {!isNew && (
-          <Section title="Photos">
-            <PhotoGrid
-              photos={photos}
-              onRemove={async (id) => {
-                await removePhoto.mutateAsync({ photoId: id })
-                setPhotos((p) => p.filter((x) => x.id !== id))
-              }}
-            />
-            <ImageUpload
-              folder="deals"
-              label="Add Photo"
-              onUploaded={async (url) => {
-                const photo = await addPhoto.mutateAsync({ dealId: deal!.id, url })
-                setPhotos((p) => [...p, photo])
-              }}
-            />
-            <p className="text-xs text-text-muted">First photo is used as the deal card image.</p>
-          </Section>
-        )}
+        <Section title="Photos">
+          {isNew ? (
+            <>
+              <PendingPhotoGrid
+                urls={pendingPhotoUrls}
+                onRemove={(url) => setPendingPhotoUrls((p) => p.filter((u) => u !== url))}
+              />
+              <ImageUpload
+                folder="deals"
+                label="Add Photo"
+                onUploaded={(url) => setPendingPhotoUrls((p) => [...p, url])}
+              />
+              <p className="text-xs text-text-muted">Photos will be saved when you create the deal. First photo is used as the card image.</p>
+            </>
+          ) : (
+            <>
+              <PhotoGrid
+                photos={photos}
+                onRemove={async (id) => {
+                  await removePhoto.mutateAsync({ photoId: id })
+                  setPhotos((p) => p.filter((x) => x.id !== id))
+                }}
+              />
+              <ImageUpload
+                folder="deals"
+                label="Add Photo"
+                onUploaded={async (url) => {
+                  const photo = await addPhoto.mutateAsync({ dealId: deal!.id, url })
+                  setPhotos((p) => [...p, photo])
+                }}
+              />
+              <p className="text-xs text-text-muted">First photo is used as the deal card image.</p>
+            </>
+          )}
+        </Section>
 
         {/* Admin notes */}
         <Section title="Admin Notes">

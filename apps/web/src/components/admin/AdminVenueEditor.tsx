@@ -97,7 +97,7 @@ export function AdminVenueEditor({ venue, categories, isNew }: Props) {
       phone: data.phone || undefined,
     }
     if (isNew) {
-      const created = await createVenue.mutateAsync(payload)
+      const created = await createVenue.mutateAsync({ ...payload, logoUrl: logoUrl || undefined })
       router.push(`/admin/venues/${created.id}`)
     } else {
       await updateVenue.mutateAsync({ id: venue!.id, ...payload, logoUrl: logoUrl || null })
@@ -205,20 +205,19 @@ export function AdminVenueEditor({ venue, categories, isNew }: Props) {
           </div>
         </Section>
 
-        {!isNew && (
-          <Section title="Logo">
-            {logoUrl && (
-              <div className="flex items-center gap-3">
-                <div className="relative h-16 w-16 rounded-lg overflow-hidden border border-surface-border">
-                  <Image src={logoUrl} alt="Venue logo" fill className="object-contain p-1" />
-                </div>
-                <button type="button" onClick={() => setLogoUrl('')} className="text-xs text-red-500 hover:underline">Remove</button>
+        <Section title="Logo">
+          {logoUrl && (
+            <div className="flex items-center gap-3">
+              <div className="relative h-16 w-16 rounded-lg overflow-hidden border border-surface-border">
+                <Image src={logoUrl} alt="Venue logo" fill className="object-contain p-1" unoptimized />
               </div>
-            )}
-            <ImageUpload folder="venues" label={logoUrl ? 'Replace Logo' : 'Upload Logo'} onUploaded={setLogoUrl} />
-            <p className="text-xs text-text-muted">Shown on deal cards and the venue profile. Square images work best.</p>
-          </Section>
-        )}
+              <button type="button" onClick={() => setLogoUrl('')} className="text-xs text-red-500 hover:underline">Remove</button>
+            </div>
+          )}
+          <ImageUpload folder="venues" label={logoUrl ? 'Replace Logo' : 'Upload Logo'} onUploaded={setLogoUrl} />
+          {isNew && <p className="text-xs text-text-muted">Logo will be saved when you create the venue.</p>}
+          {!isNew && <p className="text-xs text-text-muted">Shown on deal cards and the venue profile. Square images work best.</p>}
+        </Section>
 
         <Section title="SEO">
           <Input label="Meta Title" {...register('metaTitle')} />
