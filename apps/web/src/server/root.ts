@@ -4,6 +4,7 @@ import { venuesRouter } from './routers/venues'
 import { submissionsRouter } from './routers/submissions'
 import { portalRouter } from './routers/portal'
 import { adminRouter } from './routers/admin'
+import { contactRouter } from './routers/contact'
 
 export const appRouter = router({
   deals: dealsRouter,
@@ -11,6 +12,7 @@ export const appRouter = router({
   submissions: submissionsRouter,
   portal: portalRouter,
   admin: adminRouter,
+  contact: contactRouter,
 })
 
 export type AppRouter = typeof appRouter

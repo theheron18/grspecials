@@ -63,3 +63,19 @@ export async function sendDealExpiring(to: string, dealTitle: string, expiryDate
 export async function sendVenuePortalInvite(to: string, venueName: string, portalUrl: string) {
   await sendEmail({ to, templateSlug: 'venue-portal-invite', vars: { venueName, portalUrl } })
 }
+
+export async function sendContactEmail(name: string, senderEmail: string, message: string) {
+  if (!env.RESEND_API_KEY) {
+    console.warn('[email] RESEND_API_KEY not set, skipping contact email')
+    return
+  }
+  const safeMessage = message.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')
+  await getResend().emails.send({
+    from: env.EMAIL_FROM,
+    to: ['theheron18', 'yahoo.com'].join('@'),
+    replyTo: senderEmail,
+    subject: `GRspecials contact: ${name}`,
+    html: `<p><strong>From:</strong> ${name} &lt;${senderEmail}&gt;</p><hr><p>${safeMessage}</p>`,
+    text: `From: ${name} <${senderEmail}>\n\n${message}`,
+  })
+}

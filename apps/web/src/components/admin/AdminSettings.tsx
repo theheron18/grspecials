@@ -20,13 +20,14 @@ interface Props {
   templates: EmailTemplate[]
 }
 
-type SettingsTab = 'site' | 'categories' | 'deal-types' | 'neighborhoods' | 'templates'
+type SettingsTab = 'site' | 'pages' | 'categories' | 'deal-types' | 'neighborhoods' | 'templates'
 
 export function AdminSettings({ config, categories, dealTypes, neighborhoods, templates }: Props) {
   const [tab, setTab] = useState<SettingsTab>('site')
 
   const TABS: [SettingsTab, string][] = [
     ['site', 'Site Content'],
+    ['pages', 'Pages'],
     ['categories', 'Categories'],
     ['deal-types', 'Deal Types'],
     ['neighborhoods', 'Neighborhoods'],
@@ -51,6 +52,7 @@ export function AdminSettings({ config, categories, dealTypes, neighborhoods, te
       </div>
 
       {tab === 'site' && <SiteContentTab config={config} />}
+      {tab === 'pages' && <PagesTab config={config} />}
       {tab === 'categories' && <TaxonomyTab items={categories} type="category" />}
       {tab === 'deal-types' && <TaxonomyTab items={dealTypes} type="dealType" />}
       {tab === 'neighborhoods' && <NeighborhoodsTab neighborhoods={neighborhoods} />}
@@ -233,6 +235,58 @@ function NeighborhoodsTab({ neighborhoods }: { neighborhoods: Neighborhood[] }) 
           Add
         </Button>
       </div>
+    </div>
+  )
+}
+
+function PagesTab({ config }: { config: Record<string, string> }) {
+  const router = useRouter()
+  const setConfig = trpc.admin.setConfig.useMutation()
+  const [values, setValues] = useState({ ...config })
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const PAGES: { key: string; label: string; hint: string }[] = [
+    { key: 'page_about', label: 'About Page', hint: 'Shown at /about' },
+    { key: 'page_privacy', label: 'Privacy Policy', hint: 'Shown at /privacy' },
+    { key: 'page_terms', label: 'Terms of Service', hint: 'Shown at /terms' },
+  ]
+
+  async function save() {
+    setError(null)
+    try {
+      for (const { key } of PAGES) {
+        if (values[key] !== config[key]) {
+          await setConfig.mutateAsync({ key, value: values[key] ?? '' })
+        }
+      }
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to save.')
+    }
+  }
+
+  return (
+    <div className="rounded-card border border-surface-border bg-white p-5 space-y-6">
+      <p className="text-sm text-text-muted">Plain text. Line breaks are preserved. Leave blank to show the built-in default content.</p>
+      {PAGES.map(({ key, label, hint }) => (
+        <div key={key}>
+          <label className="text-sm font-medium text-text-primary block mb-0.5">{label}</label>
+          <p className="text-xs text-text-muted mb-1.5">{hint}</p>
+          <textarea
+            value={values[key] ?? ''}
+            onChange={(e) => setValues((v) => ({ ...v, [key]: e.target.value }))}
+            rows={8}
+            className="form-input resize-y text-sm"
+          />
+        </div>
+      ))}
+      {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+      <Button onClick={save} loading={setConfig.isPending} icon={<Save className="h-4 w-4" />}>
+        {saved ? '✓ Saved!' : 'Save Changes'}
+      </Button>
     </div>
   )
 }
