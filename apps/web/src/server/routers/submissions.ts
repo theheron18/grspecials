@@ -132,8 +132,33 @@ export const submissionsRouter = router({
       const deal = await ctx.prisma.deal.update({
         where: { id: input.id },
         data: { status: DealStatus.ACTIVE },
-        select: { title: true, submitterEmail: true, slug: true, venue: { select: { slug: true } } },
+        select: {
+          title: true, submitterEmail: true, slug: true,
+          venue: { select: { id: true, slug: true, address: true, latitude: true, longitude: true } },
+        },
       })
+
+      // Geocode the venue if it still has no coordinates
+      if (!deal.venue.latitude && deal.venue.address) {
+        const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+        if (token) {
+          try {
+            const geoRes = await fetch(
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(deal.venue.address)}.json?access_token=${token}&country=US&proximity=-85.6681,42.9634&limit=1`,
+            )
+            const geoJson = await geoRes.json() as { features?: { center: [number, number] }[] }
+            const coords = geoJson.features?.[0]?.center
+            if (coords) {
+              await ctx.prisma.venue.update({
+                where: { id: deal.venue.id },
+                data: { longitude: coords[0], latitude: coords[1] },
+              })
+            }
+          } catch {
+            // Non-fatal — deal still gets approved, just won't appear on map
+          }
+        }
+      }
 
       if (deal.submitterEmail) {
         await sendDealApproved(
