@@ -330,6 +330,15 @@ export const dealsRouter = router({
       return ctx.prisma.dealPhoto.delete({ where: { id: input.photoId } })
     }),
 
+  bulkUpdateStatus: adminProcedure
+    .input(z.object({ ids: z.array(z.string()).min(1), status: z.nativeEnum(DealStatus) }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.prisma.deal.updateMany({
+        where: { id: { in: input.ids } },
+        data: { status: input.status },
+      })
+    }),
+
   duplicate: adminProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {

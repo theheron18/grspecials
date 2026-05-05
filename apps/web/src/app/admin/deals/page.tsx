@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { prisma } from '@grspecials/db'
 import { DealStatus } from '@grspecials/db'
-import { formatRelativeDate } from '@/lib/utils'
 import { Plus } from 'lucide-react'
+import { AdminDealsTable } from '@/components/admin/AdminDealsTable'
 
 interface PageProps {
   searchParams: { status?: string; q?: string; page?: string }
@@ -38,7 +38,7 @@ export default async function AdminDealsPage({ searchParams }: PageProps) {
       skip: (page - 1) * limit,
       take: limit,
       include: {
-        venue: { select: { name: true, id: true } },
+        venue: { select: { name: true, id: true, slug: true } },
         category: { select: { name: true, icon: true } },
         dealType: { select: { name: true } },
       },
@@ -92,52 +92,7 @@ export default async function AdminDealsPage({ searchParams }: PageProps) {
       </div>
 
       {/* Table */}
-      <div className="rounded-card border border-surface-border bg-white overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-surface-bg border-b border-surface-border">
-            <tr>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary">Deal</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary hidden sm:table-cell">Venue</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary hidden md:table-cell">Type</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary">Status</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-text-secondary">Added</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-text-secondary">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-surface-border">
-            {deals.map((deal) => (
-              <tr key={deal.id} className="hover:bg-surface-bg">
-                <td className="px-4 py-3">
-                  <div>
-                    <Link href={`/admin/deals/${deal.id}`} className="font-medium text-text-primary hover:text-brand-blue block truncate max-w-[200px]">
-                      {deal.title}
-                    </Link>
-                    <span className="text-xs text-text-muted">{deal.category.icon} {deal.category.name}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-text-secondary text-xs hidden sm:table-cell truncate max-w-[160px]">{deal.venue.name}</td>
-                <td className="px-4 py-3 text-text-secondary text-xs hidden md:table-cell">{deal.dealType.name}</td>
-                <td className="px-4 py-3">
-                  <AdminStatusBadge status={deal.status} />
-                </td>
-                <td className="px-4 py-3 text-right text-xs text-text-muted whitespace-nowrap">
-                  {formatRelativeDate(deal.createdAt)}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Link href={`/admin/deals/${deal.id}`} className="text-xs text-brand-blue hover:underline">Edit</Link>
-                    <Link href={`/deals/${deal.venue.slug}/${deal.slug}`} className="text-xs text-text-muted hover:text-text-primary" target="_blank">View</Link>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {deals.length === 0 && (
-          <div className="py-12 text-center text-text-muted text-sm">No deals found.</div>
-        )}
-      </div>
+      <AdminDealsTable deals={deals} />
 
       {/* Pagination */}
       {pageCount > 1 && (
@@ -161,20 +116,3 @@ export default async function AdminDealsPage({ searchParams }: PageProps) {
   )
 }
 
-function AdminStatusBadge({ status }: { status: string }) {
-  const map: Record<string, { color: string; label: string }> = {
-    ACTIVE: { color: '#059669', label: 'Active' },
-    PENDING_REVIEW: { color: '#F59E0B', label: 'Pending' },
-    REJECTED: { color: '#E02424', label: 'Rejected' },
-    EXPIRED: { color: '#6B7280', label: 'Expired' },
-    DRAFT: { color: '#6B7280', label: 'Draft' },
-    ARCHIVED: { color: '#6B7280', label: 'Archived' },
-  }
-  const info = map[status] ?? { color: '#6B7280', label: status }
-  return (
-    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-      style={{ background: `${info.color}18`, color: info.color }}>
-      {info.label}
-    </span>
-  )
-}
