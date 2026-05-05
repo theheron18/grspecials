@@ -35,10 +35,20 @@ export function DealCard({ deal, className, showSource = true }: DealCardProps) 
           />
         ) : (
           <div
-            className="flex h-full items-center justify-center text-4xl"
+            className="flex h-full items-center justify-center"
             style={{ background: `linear-gradient(135deg, ${deal.category.color ?? '#F5C518'}22, ${deal.category.color ?? '#F5C518'}44)` }}
           >
-            {deal.category.icon ?? '🏷️'}
+            {deal.venue.logoUrl ? (
+              <Image
+                src={deal.venue.logoUrl}
+                alt={deal.venue.name}
+                width={80}
+                height={80}
+                className="object-contain rounded-xl"
+              />
+            ) : (
+              <span className="text-4xl">{deal.category.icon ?? '🏷️'}</span>
+            )}
           </div>
         )}
         {deal.featured && (
