@@ -64,6 +64,7 @@ function SiteContentTab({ config }: { config: Record<string, string> }) {
   const setConfig = trpc.admin.setConfig.useMutation()
   const [values, setValues] = useState({ ...config })
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const FIELDS: { key: string; label: string; multiline?: boolean }[] = [
     { key: 'site_title', label: 'Site Title (meta)' },
@@ -77,14 +78,19 @@ function SiteContentTab({ config }: { config: Record<string, string> }) {
   ]
 
   async function save() {
-    for (const [key, value] of Object.entries(values)) {
-      if (value !== config[key]) {
-        await setConfig.mutateAsync({ key, value })
+    setError(null)
+    try {
+      for (const [key, value] of Object.entries(values)) {
+        if (value !== config[key]) {
+          await setConfig.mutateAsync({ key, value })
+        }
       }
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to save. Are you logged in as admin?')
     }
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
-    router.refresh()
   }
 
   return (
@@ -108,6 +114,7 @@ function SiteContentTab({ config }: { config: Record<string, string> }) {
           )}
         </div>
       ))}
+      {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
       <Button onClick={save} loading={setConfig.isPending} icon={<Save className="h-4 w-4" />}>
         {saved ? '✓ Saved!' : 'Save Changes'}
       </Button>
