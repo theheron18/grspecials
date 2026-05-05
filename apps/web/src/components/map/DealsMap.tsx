@@ -53,22 +53,20 @@ export function DealsMap({ pins, center = [-85.6681, 42.9634], zoom = 12, onPinC
         // Add deal pins
         pins.forEach((pin) => {
           const el = document.createElement('div')
-          el.style.cssText = 'width: 32px; height: 32px; cursor: pointer;'
-          el.title = pin.title
-
-          const inner = document.createElement('div')
-          inner.style.cssText = `
+          el.className = 'deal-map-pin'
+          el.style.cssText = `
             width: 32px; height: 32px; border-radius: 50%;
             background: ${pin.featured ? '#F5C518' : pin.categoryColor};
             border: 3px solid white;
             box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             font-size: 14px; transition: transform 0.15s;
           `
-          el.appendChild(inner)
+          el.title = pin.title
 
-          el.addEventListener('mouseenter', () => { inner.style.transform = 'scale(1.2)' })
-          el.addEventListener('mouseleave', () => { inner.style.transform = '' })
+          el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.2)' })
+          el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)' })
           el.addEventListener('click', () => handlePinClick(pin))
 
           new mapboxgl.default.Marker({ element: el })
