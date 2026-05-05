@@ -27,6 +27,7 @@ export function SiteFooter() {
             <ul className="space-y-2">
               {[
                 ['All Deals', '/deals'],
+                ['Venues', '/venues'],
                 ['Happy Hours', '/deals?dealType=happy-hour'],
                 ['Daily Specials', '/deals?dealType=daily-special'],
                 ['Events', '/deals?dealType=event-deal'],
