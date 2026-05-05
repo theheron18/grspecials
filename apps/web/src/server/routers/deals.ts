@@ -112,8 +112,7 @@ export const dealsRouter = router({
 
       if (!deal) throw new TRPCError({ code: 'NOT_FOUND' })
 
-      // Increment views in background
-      void ctx.prisma.deal.update({
+      await ctx.prisma.deal.update({
         where: { id: deal.id },
         data: { views: { increment: 1 } },
       })

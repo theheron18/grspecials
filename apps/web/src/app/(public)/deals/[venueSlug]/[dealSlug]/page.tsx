@@ -51,8 +51,7 @@ export default async function DealDetailPage({ params }: PageProps) {
   const deal = await getDeal(params.venueSlug, params.dealSlug)
   if (!deal) notFound()
 
-  // Increment views
-  void prisma.deal.update({ where: { id: deal.id }, data: { views: { increment: 1 } } })
+  await prisma.deal.update({ where: { id: deal.id }, data: { views: { increment: 1 } } })
 
   const expiry = getExpiryLabel(deal.endDate)
   const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://grspecials.com'
