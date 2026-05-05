@@ -45,6 +45,7 @@ export function DealCard({ deal, className, showSource = true }: DealCardProps) 
                 width={80}
                 height={80}
                 className="object-contain rounded-xl"
+                unoptimized
               />
             ) : (
               <span className="text-4xl">{deal.category.icon ?? '🏷️'}</span>
