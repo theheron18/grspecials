@@ -1,5 +1,6 @@
 'use client'
 
+import 'mapbox-gl/dist/mapbox-gl.css'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import type { MapPin } from '@grspecials/types'
 
