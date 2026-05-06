@@ -5,6 +5,11 @@ import { slugify } from '@/lib/utils'
 import { TRPCError } from '@trpc/server'
 import { getTagsForDate } from '@/lib/eventTags'
 
+/** Exclude deals whose endDate has passed, regardless of cron status */
+function notExpired(): Prisma.DealWhereInput {
+  return { OR: [{ endDate: null }, { endDate: { gte: new Date() } }] }
+}
+
 const dealCardSelect = {
   id: true,
   title: true,
@@ -55,6 +60,7 @@ export const dealsRouter = router({
 
       const where: Prisma.DealWhereInput = {
         status: DealStatus.ACTIVE,
+        ...notExpired(),
         ...(filters.category && { category: { slug: filters.category } }),
         ...(filters.dealType && { dealType: { slug: filters.dealType } }),
         ...(filters.neighborhood && { neighborhood: { slug: filters.neighborhood } }),
@@ -103,6 +109,7 @@ export const dealsRouter = router({
         where: {
           slug: input.dealSlug,
           status: DealStatus.ACTIVE,
+          ...notExpired(),
           venue: { slug: input.venueSlug },
         },
         include: {
@@ -137,7 +144,7 @@ export const dealsRouter = router({
     .input(z.object({ limit: z.number().int().min(1).max(12).default(6) }))
     .query(async ({ ctx, input }) => {
       return ctx.prisma.deal.findMany({
-        where: { status: DealStatus.ACTIVE, featured: true },
+        where: { status: DealStatus.ACTIVE, featured: true, ...notExpired() },
         orderBy: { createdAt: 'desc' },
         take: input.limit,
         select: dealCardSelect,
@@ -148,7 +155,7 @@ export const dealsRouter = router({
     .input(z.object({ limit: z.number().int().min(1).max(12).default(8) }))
     .query(async ({ ctx, input }) => {
       return ctx.prisma.deal.findMany({
-        where: { status: DealStatus.ACTIVE },
+        where: { status: DealStatus.ACTIVE, ...notExpired() },
         orderBy: { createdAt: 'desc' },
         take: input.limit,
         select: dealCardSelect,

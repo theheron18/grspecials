@@ -18,7 +18,7 @@ async function getHolidayDeals() {
   if (!holiday) return null
 
   const deals = await prisma.deal.findMany({
-    where: { status: 'ACTIVE', tags: { has: holiday.tag } },
+    where: { status: 'ACTIVE', tags: { has: holiday.tag }, OR: [{ endDate: null }, { endDate: { gte: new Date() } }] },
     orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
     take: 6,
     include: {
@@ -36,7 +36,7 @@ async function getHolidayDeals() {
 async function getHomepageData() {
   const [featured, recent, categories, config] = await Promise.all([
     prisma.deal.findMany({
-      where: { status: 'ACTIVE', featured: true },
+      where: { status: 'ACTIVE', featured: true, OR: [{ endDate: null }, { endDate: { gte: new Date() } }] },
       orderBy: { createdAt: 'desc' },
       take: 6,
       include: {
@@ -47,7 +47,7 @@ async function getHomepageData() {
       },
     }),
     prisma.deal.findMany({
-      where: { status: 'ACTIVE' },
+      where: { status: 'ACTIVE', OR: [{ endDate: null }, { endDate: { gte: new Date() } }] },
       orderBy: { createdAt: 'desc' },
       take: 8,
       include: {
