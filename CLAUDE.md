@@ -9,17 +9,20 @@ Grand Rapids, MI deals/specials directory. Next.js 14 App Router monorepo (Turbo
 ## Commands
 ```bash
 # Dev (from repo root)
-pnpm dev --filter=web
+npm run dev
 
 # Build
-pnpm build --filter=web
+npm run build
+
+# Type check
+npm run type-check
 
 # Change admin password
 node scripts/change-password.mjs
 
 # Database (from packages/db)
-pnpm prisma studio
-pnpm prisma migrate dev
+npx prisma studio
+npx prisma migrate dev
 ```
 
 ## Monorepo structure
@@ -50,6 +53,13 @@ URL pattern: `/deals/[venueSlug]/[dealSlug]`. Never use `deal.id` or `venue.id` 
 **6. Next.js Image for external URLs**
 Allowed domains are in `apps/web/next.config.mjs` remotePatterns. Venue logo thumbnails in `DealCard.tsx` use `unoptimized` to bypass this check (safe for small fallback images).
 
+**7. All dates use Eastern Time (America/Detroit) — Vercel server runs UTC**
+Grand Rapids is Eastern Time. The Vercel server's `new Date()` is UTC, so naive comparisons break after 8 PM ET.
+- Get today's Eastern date: `new Date().toLocaleDateString('en-CA', { timeZone: 'America/Detroit' })` → returns `YYYY-MM-DD`
+- Store `endDate` from admin date pickers as `new Date(dateStr + 'T23:59:59')` (no timezone suffix = browser local = Eastern). This makes deals expire at 11:59 PM Eastern, not UTC midnight.
+- Display stored dates back in ET: `date.toLocaleDateString('en-CA', { timeZone: 'America/Detroit' })`
+- The `notExpired()` helper in `deals.ts` provides real-time expiry filtering in all public queries. The daily cron at `api/cron/expire-deals/` sets status=EXPIRED for DB cleanup — both layers are needed.
+
 ## Key file locations
 | What | Where |
 |------|-------|
@@ -64,6 +74,10 @@ Allowed domains are in `apps/web/next.config.mjs` remotePatterns. Venue logo thu
 | Shared types | `packages/types/src/index.ts` |
 | Prisma schema | `packages/db/prisma/schema.prisma` |
 | Cron jobs | `vercel.json` + `apps/web/src/app/api/cron/` |
+| Holiday calendar | `apps/web/src/lib/holidays.ts` |
+| Drink day calendar | `apps/web/src/lib/drinkDays.ts` |
+| Event tag auto-detection | `apps/web/src/lib/eventTags.ts` |
+| Admin settings UI | `apps/web/src/components/admin/AdminSettings.tsx` |
 
 ## Active integrations
 | Service | Env vars |
