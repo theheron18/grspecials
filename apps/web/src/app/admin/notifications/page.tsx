@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { prisma } from '@grspecials/db'
 import { NotificationsPanel } from '@/components/admin/NotificationsPanel'
 

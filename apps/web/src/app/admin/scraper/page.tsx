@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { prisma } from '@grspecials/db'
 import { ScraperManager } from '@/components/admin/ScraperManager'
 

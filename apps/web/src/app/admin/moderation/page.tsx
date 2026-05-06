@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { prisma } from '@grspecials/db'
 import { ModerationQueue } from '@/components/admin/ModerationQueue'
 
