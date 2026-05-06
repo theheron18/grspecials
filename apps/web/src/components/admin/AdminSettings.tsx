@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc/client'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Plus, Trash2, GripVertical, Save } from 'lucide-react'
+import { HOLIDAYS, ALL_HOLIDAY_TAGS } from '@/lib/holidays'
+import { DRINK_DAYS, DRINK_DAY_TAGS_BY_SEASON } from '@/lib/drinkDays'
 
 interface Category { id: string; name: string; slug: string; icon?: string | null; color?: string | null; active: boolean; sortOrder: number }
 interface DealType { id: string; name: string; slug: string; icon?: string | null; color?: string | null; active: boolean; sortOrder: number }
@@ -20,7 +22,7 @@ interface Props {
   templates: EmailTemplate[]
 }
 
-type SettingsTab = 'site' | 'pages' | 'categories' | 'deal-types' | 'neighborhoods' | 'templates'
+type SettingsTab = 'site' | 'pages' | 'banners' | 'categories' | 'deal-types' | 'neighborhoods' | 'templates'
 
 export function AdminSettings({ config, categories, dealTypes, neighborhoods, templates }: Props) {
   const [tab, setTab] = useState<SettingsTab>('site')
@@ -28,6 +30,7 @@ export function AdminSettings({ config, categories, dealTypes, neighborhoods, te
   const TABS: [SettingsTab, string][] = [
     ['site', 'Site Content'],
     ['pages', 'Pages'],
+    ['banners', 'Banners'],
     ['categories', 'Categories'],
     ['deal-types', 'Deal Types'],
     ['neighborhoods', 'Neighborhoods'],
@@ -53,6 +56,7 @@ export function AdminSettings({ config, categories, dealTypes, neighborhoods, te
 
       {tab === 'site' && <SiteContentTab config={config} />}
       {tab === 'pages' && <PagesTab config={config} />}
+      {tab === 'banners' && <BannersTab config={config} />}
       {tab === 'categories' && <TaxonomyTab items={categories} type="category" />}
       {tab === 'deal-types' && <TaxonomyTab items={dealTypes} type="dealType" />}
       {tab === 'neighborhoods' && <NeighborhoodsTab neighborhoods={neighborhoods} />}
@@ -116,6 +120,133 @@ function SiteContentTab({ config }: { config: Record<string, string> }) {
           )}
         </div>
       ))}
+      {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+      <Button onClick={save} loading={setConfig.isPending} icon={<Save className="h-4 w-4" />}>
+        {saved ? '✓ Saved!' : 'Save Changes'}
+      </Button>
+    </div>
+  )
+}
+
+// Build tag → Holiday lookup (first occurrence wins for duplicates like 'christmas')
+const holidayByTag: Record<string, { name: string; emoji: string; drinkFocus: string }> = {}
+for (const h of Object.values(HOLIDAYS)) {
+  if (!holidayByTag[h.tag]) holidayByTag[h.tag] = h
+}
+
+// Build tag → DrinkDay lookup
+const drinkDayByTag: Record<string, { name: string; emoji: string; tagline: string }> = {}
+for (const d of Object.values(DRINK_DAYS)) {
+  if (!drinkDayByTag[d.tag]) drinkDayByTag[d.tag] = d
+}
+
+function BannersTab({ config }: { config: Record<string, string> }) {
+  const router = useRouter()
+  const setConfig = trpc.admin.setConfig.useMutation()
+  const [values, setValues] = useState<Record<string, string>>({ ...config })
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  function fieldProps(key: string) {
+    return {
+      value: values[key] ?? '',
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+        setValues((v) => ({ ...v, [key]: e.target.value })),
+    }
+  }
+
+  async function save() {
+    setError(null)
+    try {
+      const allKeys = [
+        ...ALL_HOLIDAY_TAGS.flatMap(({ tag }) => [
+          `banner_holiday_${tag}_title`,
+          `banner_holiday_${tag}_subtitle`,
+        ]),
+        ...Object.values(DRINK_DAY_TAGS_BY_SEASON).flat().map(({ tag }) => `banner_drinkday_${tag}_tagline`),
+      ]
+      for (const key of allKeys) {
+        if (values[key] !== undefined && values[key] !== (config[key] ?? '')) {
+          await setConfig.mutateAsync({ key, value: values[key] })
+        }
+      }
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to save.')
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Holiday Banners */}
+      <div className="rounded-card border border-surface-border bg-white overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-surface-border bg-surface-bg">
+          <h3 className="text-sm font-semibold text-text-primary">Holiday Banners</h3>
+          <p className="text-xs text-text-muted mt-0.5">Customize the title and subtitle shown on each holiday's banner. Leave blank to use the default text.</p>
+        </div>
+        <div className="divide-y divide-surface-border">
+          {ALL_HOLIDAY_TAGS.map(({ label, tag }) => {
+            const h = holidayByTag[tag]
+            return (
+              <div key={tag} className="px-5 py-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="sm:col-span-2 flex items-center gap-2">
+                  <span className="text-lg">{h?.emoji ?? '🎉'}</span>
+                  <span className="text-sm font-medium text-text-primary">{label}</span>
+                </div>
+                <div>
+                  <label className="text-xs text-text-secondary block mb-1">Banner Title</label>
+                  <input
+                    {...fieldProps(`banner_holiday_${tag}_title`)}
+                    placeholder={h ? `${h.emoji} ${h.name} Specials` : `${label} Specials`}
+                    className="form-input text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-text-secondary block mb-1">Subtitle</label>
+                  <input
+                    {...fieldProps(`banner_holiday_${tag}_subtitle`)}
+                    placeholder={h?.drinkFocus ?? 'e.g. Margaritas, Tequila, and Mexican Lagers.'}
+                    className="form-input text-sm"
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Drink Day Banners */}
+      <div className="rounded-card border border-surface-border bg-white overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-surface-border bg-surface-bg">
+          <h3 className="text-sm font-semibold text-text-primary">National Drink Day Banners</h3>
+          <p className="text-xs text-text-muted mt-0.5">Customize the tagline shown in the slim drink day bar. Leave blank to use the default.</p>
+        </div>
+        <div className="divide-y divide-surface-border">
+          {Object.entries(DRINK_DAY_TAGS_BY_SEASON).map(([season, days]) => (
+            <div key={season}>
+              <div className="px-5 py-2 bg-surface-bg border-b border-surface-border">
+                <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide">{season}</p>
+              </div>
+              {days.map(({ label, tag }) => {
+                const d = drinkDayByTag[tag]
+                return (
+                  <div key={tag} className="px-5 py-3 grid grid-cols-[1fr_2fr] gap-4 items-center border-b border-surface-border last:border-b-0">
+                    <p className="text-sm text-text-primary truncate">{d?.emoji} {label}</p>
+                    <input
+                      {...fieldProps(`banner_drinkday_${tag}_tagline`)}
+                      placeholder={d?.tagline ?? label}
+                      className="form-input text-sm"
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
       <Button onClick={save} loading={setConfig.isPending} icon={<Save className="h-4 w-4" />}>
         {saved ? '✓ Saved!' : 'Save Changes'}

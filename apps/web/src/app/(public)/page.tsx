@@ -79,6 +79,16 @@ export default async function HomePage() {
   const headline = config['hero_headline'] ?? "Grand Rapids' Best Deals & Specials"
   const subline = config['hero_subline'] ?? 'Find happy hours, daily specials, events, and sales near you.'
 
+  const holidayBannerTitle = holidayData
+    ? (config[`banner_holiday_${holidayData.holiday.tag}_title`] || `${holidayData.holiday.emoji} ${holidayData.holiday.name} Specials`)
+    : ''
+  const holidayBannerSubtitle = holidayData
+    ? (config[`banner_holiday_${holidayData.holiday.tag}_subtitle`] || holidayData.holiday.drinkFocus)
+    : ''
+  const drinkDayTagline = drinkDay
+    ? (config[`banner_drinkday_${drinkDay.tag}_tagline`] || drinkDay.tagline)
+    : ''
+
   return (
     <>
       {/* Hero */}
@@ -155,12 +165,8 @@ export default async function HomePage() {
           <section className="rounded-card border-2 border-brand-yellow/40 bg-gradient-to-r from-brand-yellow/10 to-orange-50 overflow-hidden">
             <div className="px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
               <div>
-                <h2 className="text-lg font-bold text-text-primary">
-                  {holidayData.holiday.emoji} {holidayData.holiday.name} Specials
-                </h2>
-                <p className="text-sm text-text-secondary mt-0.5">
-                  {holidayData.holiday.drinkFocus}
-                </p>
+                <h2 className="text-lg font-bold text-text-primary">{holidayBannerTitle}</h2>
+                <p className="text-sm text-text-secondary mt-0.5">{holidayBannerSubtitle}</p>
                 <p className="text-xs text-text-muted mt-1">
                   {holidayData.deals.length} deal{holidayData.deals.length !== 1 ? 's' : ''} available today
                 </p>
@@ -188,7 +194,7 @@ export default async function HomePage() {
               <p className="text-sm font-semibold text-text-primary">
                 Today is <Link href={`/deals?tag=${drinkDay.tag}`} className="text-brand-blue hover:underline">{drinkDay.name}</Link>
               </p>
-              <p className="text-xs text-text-secondary mt-0.5 truncate">{drinkDay.tagline}</p>
+              <p className="text-xs text-text-secondary mt-0.5 truncate">{drinkDayTagline}</p>
             </div>
           </div>
         )}
