@@ -32,7 +32,7 @@ export const DRINK_DAYS: Record<string, DrinkDay> = {
     name: 'National Drink Wine Day',
     emoji: '🍷',
     tag: 'national-drink-wine-day',
-    tagline: 'Red, white, or rosé — tonight's the night.',
+    tagline: 'Red, white, or rosé — tonight\'s the night.',
     season: 'Winter Warmers',
   },
   '02-22': {
