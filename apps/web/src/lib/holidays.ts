@@ -143,19 +143,19 @@ export const ALL_HOLIDAY_TAGS: { label: string; tag: string }[] = [
 
 export function getTodaysHoliday(): Holiday | null {
   const now = new Date()
-  const mm = String(now.getMonth() + 1).padStart(2, '0')
-  const dd = String(now.getDate()).padStart(2, '0')
+  const eastern = now.toLocaleDateString('en-CA', { timeZone: 'America/Detroit' })
+  const [yearStr, mm, dd] = eastern.split('-')
   const key = `${mm}-${dd}`
 
   if (HOLIDAYS[key]) return HOLIDAYS[key]
 
   // Check if today falls within the windowDays of any holiday
+  const todayEastern = new Date(`${eastern}T00:00:00`)
   for (const [dateKey, holiday] of Object.entries(HOLIDAYS)) {
     if (!holiday.windowDays) continue
     const [hMm, hDd] = dateKey.split('-').map(Number)
-    const holidayDate = new Date(now.getFullYear(), hMm - 1, hDd)
-    const diffMs = now.getTime() - holidayDate.getTime()
-    const diffDays = diffMs / (1000 * 60 * 60 * 24)
+    const holidayDate = new Date(Number(yearStr), hMm - 1, hDd)
+    const diffDays = (todayEastern.getTime() - holidayDate.getTime()) / (1000 * 60 * 60 * 24)
     if (diffDays >= -holiday.windowDays && diffDays <= holiday.windowDays) {
       return holiday
     }

@@ -11,8 +11,8 @@ export interface UpcomingEvent {
 }
 
 function dateKey(date: Date): string {
-  const mm = String(date.getMonth() + 1).padStart(2, '0')
-  const dd = String(date.getDate()).padStart(2, '0')
+  const eastern = date.toLocaleDateString('en-CA', { timeZone: 'America/Detroit' })
+  const [, mm, dd] = eastern.split('-')
   return `${mm}-${dd}`
 }
 
