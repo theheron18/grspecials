@@ -167,14 +167,6 @@ export const adminRouter = router({
       })
     }),
 
-  // Upload URL
-  getUploadUrl: adminProcedure
-    .input(z.object({ folder: z.enum(['deals', 'venues']), contentType: z.string(), ext: z.string() }))
-    .mutation(async ({ input }) => {
-      const { getUploadUrl } = await import('@/lib/upload')
-      return getUploadUrl(input.folder, input.contentType, input.ext)
-    }),
-
   // Audit log
   auditLog: adminProcedure
     .input(z.object({ page: z.number().int().min(1).default(1), limit: z.number().int().default(50) }))

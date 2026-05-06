@@ -12,7 +12,7 @@ const handler = async (req: NextRequest) => {
     createContext: async () => {
       const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
       const session = token
-        ? { user: { id: token.id as string, email: token.email ?? '', name: token.name ?? null, role: token.role as string } }
+        ? { user: { id: token.id as string, email: token.email ?? '', name: token.name ?? null, role: token.role as string }, expires: '' }
         : null
       return { prisma, session }
     },

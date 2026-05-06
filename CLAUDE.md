@@ -90,3 +90,36 @@ Grand Rapids is Eastern Time. The Vercel server's `new Date()` is UTC, so naive 
 
 ## User context
 Non-technical site owner. Tests via the live Vercel deployment. When something appears broken, first suggest hard-refresh (`Ctrl+Shift+R`) or incognito window before assuming a code problem — browser cache has caused false alarms twice.
+
+## Session behavior
+
+Read CLAUDE.md for project context. The critical rules in CLAUDE.md are non-negotiable — do not ask me to confirm them. Before editing any file, check if it is mentioned in the CLAUDE.md critical rules section and apply those rules without exception.
+
+### Session rules
+- Read only files directly relevant to the current task
+- Do not summarize files back to me after reading them
+- Do not explain what you're about to do — just do it
+- Only add comments when the code does something non-obvious or works around a known bug — not to describe what code does
+- After completing a task, stop and wait for my next instruction
+- If you need to read a file, state the filename only, not its contents
+- Prefer small focused edits over rewriting entire files
+- If something is unclear, ask one specific question rather than making assumptions
+- Do not push to git or deploy after each change — make all changes for this task first, I will push manually when ready
+- Solve problems with the simplest approach that works — do not introduce new libraries or packages unless I ask
+- Only modify files directly related to the current task — do not refactor or reformat code you encounter along the way
+- When fixing a bug, change the minimum amount of code needed
+- If you encounter an unexpected error mid-task, stop and describe it in one sentence before attempting a fix
+- When fixing a bug that has occurred before, add a simple test to prevent regression — do not write tests for straightforward code
+- Before starting a task, confirm git status is clean — if there are uncommitted changes, stop and tell me
+- If you work around a non-obvious bug or discover a constraint not in CLAUDE.md, note it at the end of the task so I can decide whether to add it to CLAUDE.md
+
+### Safety rules
+- Never run database migrations automatically — show me the migration SQL first and wait for my approval
+- If a task requires a new environment variable, stop and tell me the name and where to add it before proceeding
+- For any changes to admin functionality or database queries, describe the change and its side effects and wait for my confirmation before making it
+
+### Before marking any task complete
+- Run `npm run type-check` and fix all errors before stopping
+- Run `npm run build` locally and confirm it succeeds
+- If either fails, fix the errors before presenting the task as done
+- Never push code that fails a type check or build

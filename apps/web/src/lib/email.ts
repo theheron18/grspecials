@@ -73,7 +73,7 @@ export async function sendContactEmail(name: string, senderEmail: string, messag
   await getResend().emails.send({
     from: env.EMAIL_FROM,
     to: ['theheron18', 'yahoo.com'].join('@'),
-    replyTo: senderEmail,
+    reply_to: senderEmail,
     subject: `GRspecials contact: ${name}`,
     html: `<p><strong>From:</strong> ${name} &lt;${senderEmail}&gt;</p><hr><p>${safeMessage}</p>`,
     text: `From: ${name} <${senderEmail}>\n\n${message}`,

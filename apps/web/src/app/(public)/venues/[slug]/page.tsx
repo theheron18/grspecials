@@ -16,7 +16,7 @@ interface PageProps {
 const dealCardSelect = {
   id: true, title: true, slug: true, shortDesc: true, status: true, source: true,
   featured: true, startTime: true, endTime: true, activeDays: true, endDate: true,
-  priceNote: true, views: true, createdAt: true,
+  priceNote: true, views: true, createdAt: true, tags: true,
   venue: {
     select: {
       id: true, name: true, slug: true, address: true, neighborhood: true,
