@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { format, formatDistanceToNow, differenceInDays, startOfDay } from 'date-fns'
+import { format, formatDistanceToNow } from 'date-fns'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -39,15 +39,24 @@ export function formatDealHours(startTime?: string | null, endTime?: string | nu
   return ''
 }
 
+// Compare dates as Eastern Time strings (YYYY-MM-DD) so Vercel's UTC clock
+// doesn't falsely expire deals before midnight in Grand Rapids.
+function toEasternDateStr(date: Date): string {
+  return date.toLocaleDateString('en-CA', { timeZone: 'America/Detroit' })
+}
+
 export function getExpiryLabel(endDate: Date | null | undefined): {
   label: string
   urgent: boolean
 } | null {
   if (!endDate) return null
-  if (endDate < startOfDay(new Date())) return { label: 'Expired', urgent: true }
-  const days = differenceInDays(endDate, new Date())
-  if (days === 0) return { label: 'Expires today', urgent: true }
-  if (days === 1) return { label: 'Expires tomorrow', urgent: true }
+  const endStr = toEasternDateStr(endDate)
+  const todayStr = toEasternDateStr(new Date())
+  const tomorrowStr = toEasternDateStr(new Date(Date.now() + 86_400_000))
+  if (endStr < todayStr) return { label: 'Expired', urgent: true }
+  if (endStr === todayStr) return { label: 'Expires today', urgent: true }
+  if (endStr === tomorrowStr) return { label: 'Expires tomorrow', urgent: true }
+  const days = Math.round((new Date(endStr).getTime() - new Date(todayStr).getTime()) / 86_400_000)
   if (days <= 7) return { label: `Expires in ${days} days`, urgent: true }
   return { label: `Expires ${format(endDate, 'MMM d')}`, urgent: false }
 }
