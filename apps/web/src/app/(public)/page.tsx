@@ -7,9 +7,30 @@ import { prisma } from '@grspecials/db'
 import { DealCard } from '@/components/deals/DealCard'
 import { DealCardSkeleton } from '@/components/ui/Skeleton'
 import { buildMeta } from '@/lib/seo'
+import { getTodaysHoliday } from '@/lib/holidays'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = buildMeta()
+
+async function getHolidayDeals() {
+  const holiday = getTodaysHoliday()
+  if (!holiday) return null
+
+  const deals = await prisma.deal.findMany({
+    where: { status: 'ACTIVE', tags: { has: holiday.tag } },
+    orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
+    take: 6,
+    include: {
+      venue: { select: { id: true, name: true, slug: true, address: true, neighborhood: true, latitude: true, longitude: true, verified: true, logoUrl: true } },
+      category: { select: { id: true, name: true, slug: true, icon: true, color: true } },
+      dealType: { select: { id: true, name: true, slug: true, icon: true, color: true } },
+      photos: { take: 1, orderBy: { sortOrder: 'asc' } },
+    },
+  })
+
+  if (deals.length === 0) return null
+  return { holiday, deals }
+}
 
 async function getHomepageData() {
   const [featured, recent, categories, config] = await Promise.all([
@@ -48,7 +69,10 @@ async function getHomepageData() {
 }
 
 export default async function HomePage() {
-  const { featured, recent, categories, config } = await getHomepageData()
+  const [{ featured, recent, categories, config }, holidayData] = await Promise.all([
+    getHomepageData(),
+    getHolidayDeals(),
+  ])
 
   const headline = config['hero_headline'] ?? "Grand Rapids' Best Deals & Specials"
   const subline = config['hero_subline'] ?? 'Find happy hours, daily specials, events, and sales near you.'
@@ -124,6 +148,33 @@ export default async function HomePage() {
       </section>
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-12">
+        {/* Holiday banner */}
+        {holidayData && (
+          <section className="rounded-card border-2 border-brand-yellow/40 bg-gradient-to-r from-brand-yellow/10 to-orange-50 overflow-hidden">
+            <div className="px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <h2 className="text-lg font-bold text-text-primary">
+                  {holidayData.holiday.emoji} {holidayData.holiday.name} Specials
+                </h2>
+                <p className="text-sm text-text-secondary mt-0.5">
+                  {holidayData.deals.length} deal{holidayData.deals.length !== 1 ? 's' : ''} tagged for today — get them while they last!
+                </p>
+              </div>
+              <Link
+                href={`/deals?tag=${holidayData.holiday.tag}`}
+                className="text-sm font-medium text-brand-blue hover:underline flex items-center gap-1 shrink-0"
+              >
+                View all <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            <div className="px-5 pb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {holidayData.deals.map((deal) => (
+                <DealCard key={deal.id} deal={deal as never} />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Featured deals */}
         {featured.length > 0 && (
           <section>

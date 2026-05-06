@@ -19,6 +19,7 @@ const dealCardSelect = {
   priceNote: true,
   views: true,
   createdAt: true,
+  tags: true,
   venue: {
     select: {
       id: true, name: true, slug: true, address: true, neighborhood: true,
@@ -39,6 +40,7 @@ export const dealsRouter = router({
         neighborhood: z.string().optional(),
         day: z.number().int().min(0).max(6).optional(),
         featured: z.boolean().optional(),
+        tag: z.string().optional(),
         q: z.string().optional(),
         sort: z.enum(['newest', 'ending_soon', 'most_popular', 'alphabetical']).optional().default('newest'),
         page: z.number().int().min(1).optional().default(1),
@@ -58,6 +60,7 @@ export const dealsRouter = router({
         ...(filters.day !== undefined && { activeDays: { has: filters.day } }),
         ...(filters.featured !== undefined && { featured: filters.featured }),
         ...(filters.venueId && { venueId: filters.venueId }),
+        ...(filters.tag && { tags: { has: filters.tag } }),
         ...(q && {
           OR: [
             { title: { contains: q, mode: 'insensitive' } },
@@ -270,6 +273,7 @@ export const dealsRouter = router({
         discountedPrice: z.number().optional(),
         discountPercent: z.number().optional(),
         photoUrls: z.array(z.string().url()).optional(),
+        tags: z.array(z.string()).optional().default([]),
         status: z.nativeEnum(DealStatus).optional().default(DealStatus.ACTIVE),
       }),
     )
@@ -307,6 +311,7 @@ export const dealsRouter = router({
         adminNotes: z.string().optional().nullable(),
         metaTitle: z.string().optional().nullable(),
         metaDescription: z.string().optional().nullable(),
+        tags: z.array(z.string()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

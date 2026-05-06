@@ -25,13 +25,14 @@ interface PageProps {
     day?: string
     sort?: string
     q?: string
+    tag?: string
     page?: string
     view?: string
   }
 }
 
 async function getDeals(filters: DealFiltersType) {
-  const { category, dealType, neighborhood, day, q, sort, page = 1, limit = 24 } = filters
+  const { category, dealType, neighborhood, day, tag, q, sort, page = 1, limit = 24 } = filters
 
   const where = {
     status: 'ACTIVE' as const,
@@ -39,6 +40,7 @@ async function getDeals(filters: DealFiltersType) {
     ...(dealType && { dealType: { slug: dealType } }),
     ...(neighborhood && { neighborhood: { slug: neighborhood } }),
     ...(day !== undefined && { activeDays: { has: day } }),
+    ...(tag && { tags: { has: tag } }),
     ...(q && {
       OR: [
         { title: { contains: q, mode: 'insensitive' as const } },
@@ -92,6 +94,7 @@ export default async function DealsPage({ searchParams }: PageProps) {
     neighborhood: searchParams.neighborhood,
     day: searchParams.day !== undefined ? parseInt(searchParams.day) : undefined,
     sort: (searchParams.sort as DealFiltersType['sort']) ?? 'newest',
+    tag: searchParams.tag,
     q: searchParams.q,
     page,
     limit: 24,
@@ -110,7 +113,9 @@ export default async function DealsPage({ searchParams }: PageProps) {
       <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-text-primary">
-            {searchParams.category
+            {searchParams.tag
+              ? `${searchParams.tag.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} Specials`
+              : searchParams.category
               ? taxonomy.categories.find((c) => c.slug === searchParams.category)?.name ?? 'Deals'
               : searchParams.dealType
               ? taxonomy.dealTypes.find((d) => d.slug === searchParams.dealType)?.name ?? 'Deals'

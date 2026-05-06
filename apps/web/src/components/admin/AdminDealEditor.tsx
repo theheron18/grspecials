@@ -47,6 +47,7 @@ interface Deal {
   activeDays: number[]; startTime?: string | null; endTime?: string | null
   startDate?: Date | null; endDate?: Date | null; priceNote?: string | null
   adminNotes?: string | null; metaTitle?: string | null; metaDescription?: string | null
+  tags?: string[]
   venue: Venue; photos: { url: string; altText?: string | null }[]
 }
 
@@ -68,6 +69,7 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
   const removePhoto = trpc.deals.removePhoto.useMutation()
   const [photos, setPhotos] = React.useState(deal?.photos ?? [])
   const [pendingPhotoUrls, setPendingPhotoUrls] = React.useState<string[]>([])
+  const [tagsInput, setTagsInput] = React.useState((deal?.tags ?? []).join(', '))
 
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting, isDirty } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -102,10 +104,16 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
     setValue('activeDays', curr.includes(day) ? curr.filter((d) => d !== day) : [...curr, day], { shouldValidate: true })
   }
 
+  function parseTags(raw: string): string[] {
+    return raw.split(',').map((t) => t.trim().toLowerCase().replace(/\s+/g, '-')).filter(Boolean)
+  }
+
   async function onSubmit(data: FormValues) {
+    const tags = parseTags(tagsInput)
     if (isNew) {
       const created = await createDeal.mutateAsync({
         ...data,
+        tags,
         startDate: data.startDate ? new Date(data.startDate) : undefined,
         endDate: data.endDate ? new Date(data.endDate) : undefined,
         photoUrls: pendingPhotoUrls.length ? pendingPhotoUrls : undefined,
@@ -115,6 +123,7 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
       await updateDeal.mutateAsync({
         id: deal!.id,
         ...data,
+        tags,
         startDate: data.startDate ? new Date(data.startDate) : null,
         endDate: data.endDate ? new Date(data.endDate) : null,
         startTime: data.startTime || null,
@@ -308,6 +317,60 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
               <p className="text-xs text-text-muted">First photo is used as the deal card image.</p>
             </>
           )}
+        </Section>
+
+        {/* Tags */}
+        <Section title="Tags & Holiday Labels">
+          <div>
+            <label className="text-sm font-medium text-text-primary block mb-1.5">Tags</label>
+            <input
+              type="text"
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              placeholder="e.g. cinco-de-mayo, happy-hour, weekend"
+              className="form-input"
+            />
+            <p className="text-xs text-text-muted mt-1.5">Comma-separated. Use holiday tags to surface deals in the holiday banner.</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-text-secondary mb-1.5">Quick-add holiday tags:</p>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { label: "New Year's Day", tag: 'new-years-day' },
+                { label: "Valentine's Day", tag: 'valentines-day' },
+                { label: "St. Patrick's Day", tag: 'st-patricks-day' },
+                { label: 'Cinco de Mayo', tag: 'cinco-de-mayo' },
+                { label: 'Fourth of July', tag: 'fourth-of-july' },
+                { label: 'Halloween', tag: 'halloween' },
+                { label: 'Thanksgiving', tag: 'thanksgiving' },
+                { label: 'Christmas', tag: 'christmas' },
+                { label: "New Year's Eve", tag: 'new-years-eve' },
+              ].map(({ label, tag }) => {
+                const active = tagsInput.split(',').map((t) => t.trim()).includes(tag)
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => {
+                      const current = tagsInput.split(',').map((t) => t.trim()).filter(Boolean)
+                      if (active) {
+                        setTagsInput(current.filter((t) => t !== tag).join(', '))
+                      } else {
+                        setTagsInput([...current, tag].join(', '))
+                      }
+                    }}
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium border transition-colors ${
+                      active
+                        ? 'bg-brand-blue border-brand-blue text-white'
+                        : 'bg-white border-surface-border text-text-secondary hover:border-brand-blue'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         </Section>
 
         {/* Admin notes */}

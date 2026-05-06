@@ -67,6 +67,7 @@ export interface DealCard {
     color?: string | null
   }
   photos: { url: string; altText?: string | null }[]
+  tags: string[]
   distance?: number
 }
 
@@ -132,6 +133,7 @@ export interface DealFilters {
   lat?: number
   lng?: number
   featured?: boolean
+  tag?: string
   q?: string
   page?: number
   limit?: number
