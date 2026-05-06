@@ -337,11 +337,17 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
             <div className="flex flex-wrap gap-1.5">
               {[
                 { label: "New Year's Day", tag: 'new-years-day' },
-                { label: "Valentine's Day", tag: 'valentines-day' },
+                { label: 'Super Bowl', tag: 'super-bowl' },
+                { label: 'Mardi Gras', tag: 'mardi-gras' },
                 { label: "St. Patrick's Day", tag: 'st-patricks-day' },
+                { label: 'Kentucky Derby', tag: 'kentucky-derby' },
                 { label: 'Cinco de Mayo', tag: 'cinco-de-mayo' },
+                { label: 'Memorial Day', tag: 'memorial-day' },
                 { label: 'Fourth of July', tag: 'fourth-of-july' },
+                { label: 'Labor Day', tag: 'labor-day' },
+                { label: 'Oktoberfest', tag: 'oktoberfest' },
                 { label: 'Halloween', tag: 'halloween' },
+                { label: 'Drinksgiving', tag: 'drinksgiving' },
                 { label: 'Thanksgiving', tag: 'thanksgiving' },
                 { label: 'Christmas', tag: 'christmas' },
                 { label: "New Year's Eve", tag: 'new-years-eve' },

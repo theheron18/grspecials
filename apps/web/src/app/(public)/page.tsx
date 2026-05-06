@@ -157,7 +157,10 @@ export default async function HomePage() {
                   {holidayData.holiday.emoji} {holidayData.holiday.name} Specials
                 </h2>
                 <p className="text-sm text-text-secondary mt-0.5">
-                  {holidayData.deals.length} deal{holidayData.deals.length !== 1 ? 's' : ''} tagged for today — get them while they last!
+                  {holidayData.holiday.drinkFocus}
+                </p>
+                <p className="text-xs text-text-muted mt-1">
+                  {holidayData.deals.length} deal{holidayData.deals.length !== 1 ? 's' : ''} available today
                 </p>
               </div>
               <Link
