@@ -3,7 +3,8 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { prisma } from '@grspecials/db'
 import { formatRelativeDate } from '@/lib/utils'
-import { FileText, Building2, ClipboardList, Bot, AlertCircle, CheckCircle, Clock } from 'lucide-react'
+import { getUpcomingEvents } from '@/lib/eventTags'
+import { FileText, Building2, ClipboardList, Bot, AlertCircle, CheckCircle, Clock, CalendarDays } from 'lucide-react'
 
 export default async function AdminDashboard() {
   const [
@@ -25,6 +26,8 @@ export default async function AdminDashboard() {
     }),
     prisma.scraperRun.findFirst({ orderBy: { startedAt: 'desc' } }),
   ])
+
+  const upcomingEvents = getUpcomingEvents(10)
 
   const stats = [
     { label: 'Active Deals', value: activeDeals, icon: FileText, color: '#1A56DB', href: '/admin/deals' },
@@ -80,6 +83,40 @@ export default async function AdminDashboard() {
           >
             Review Now
           </Link>
+        </div>
+      )}
+
+      {/* Upcoming holidays & drink days */}
+      {upcomingEvents.length > 0 && (
+        <div className="rounded-card border border-surface-border bg-white overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-surface-border bg-surface-bg">
+            <CalendarDays className="h-4 w-4 text-text-muted" />
+            <h2 className="text-sm font-semibold text-text-primary">Coming Up — Next 10 Days</h2>
+            <span className="ml-auto text-xs text-text-muted">Tag your deals before the rush</span>
+          </div>
+          <div className="divide-y divide-surface-border">
+            {upcomingEvents.map((event) => (
+              <div key={`${event.tag}-${event.daysAway}`} className="flex items-center gap-3 px-4 py-3">
+                <span className="text-xl shrink-0">{event.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-text-primary truncate">{event.name}</p>
+                  <p className="text-xs text-text-muted">
+                    {event.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    {' · '}
+                    <span className={event.daysAway <= 3 ? 'text-brand-red font-medium' : 'text-text-muted'}>
+                      {event.daysAway === 1 ? 'tomorrow' : `${event.daysAway} days away`}
+                    </span>
+                  </p>
+                </div>
+                <Link
+                  href={`/admin/deals?tag=${event.tag}`}
+                  className="shrink-0 text-xs text-brand-blue hover:underline whitespace-nowrap"
+                >
+                  View tagged deals →
+                </Link>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

@@ -3,6 +3,7 @@ import { router, publicProcedure, adminProcedure } from '../trpc'
 import { DealStatus, DealSource, Prisma } from '@grspecials/db'
 import { slugify } from '@/lib/utils'
 import { TRPCError } from '@trpc/server'
+import { getTagsForDate } from '@/lib/eventTags'
 
 const dealCardSelect = {
   id: true,
@@ -281,9 +282,16 @@ export const dealsRouter = router({
       const { photoUrls, ...data } = input
       const slug = slugify(data.title)
 
+      const autoTags = [
+        ...(data.startDate ? getTagsForDate(data.startDate) : []),
+        ...(data.endDate ? getTagsForDate(data.endDate) : []),
+      ]
+      const tags = [...new Set([...data.tags, ...autoTags])]
+
       const deal = await ctx.prisma.deal.create({
         data: {
           ...data,
+          tags,
           slug: `${slug}-${Date.now()}`,
           photos: photoUrls?.length
             ? { create: photoUrls.map((url, i) => ({ url, sortOrder: i })) }
@@ -316,6 +324,15 @@ export const dealsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input
+
+      if (data.tags !== undefined && (data.startDate || data.endDate)) {
+        const autoTags = [
+          ...(data.startDate ? getTagsForDate(data.startDate) : []),
+          ...(data.endDate ? getTagsForDate(data.endDate) : []),
+        ]
+        data.tags = [...new Set([...data.tags, ...autoTags])]
+      }
+
       return ctx.prisma.deal.update({ where: { id }, data })
     }),
 
