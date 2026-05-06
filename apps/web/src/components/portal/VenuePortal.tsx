@@ -14,7 +14,7 @@ import Image from 'next/image'
 
 interface DealType { id: string; name: string; slug: string; icon?: string | null }
 interface Deal {
-  id: string; title: string; status: string; source: string
+  id: string; title: string; description?: string | null; status: string; source: string
   startTime?: string | null; endTime?: string | null
   endDate?: Date | null; activeDays: number[]; views: number; clicks: number
   priceNote?: string | null
@@ -48,13 +48,16 @@ const dealSchema = z.object({
 
 type DealFormValues = z.infer<typeof dealSchema>
 
-type PortalView = 'deals' | 'add-deal' | 'stats'
+type PortalView = 'deals' | 'add-deal' | 'edit-deal' | 'stats'
 
 export function VenuePortal({ venue, dealTypes, token }: VenuePortalProps) {
   const [view, setView] = useState<PortalView>('deals')
   const [addSuccess, setAddSuccess] = useState(false)
+  const [editSuccess, setEditSuccess] = useState(false)
+  const [editingDeal, setEditingDeal] = useState<Deal | null>(null)
 
   const addDeal = trpc.portal.addDeal.useMutation()
+  const updateDeal = trpc.portal.updateDeal.useMutation()
   const utils = trpc.useUtils()
 
   const {
@@ -69,11 +72,34 @@ export function VenuePortal({ venue, dealTypes, token }: VenuePortalProps) {
     defaultValues: { validDays: [1, 2, 3, 4, 5] },
   })
 
+  const editForm = useForm<DealFormValues>({ resolver: zodResolver(dealSchema) })
+  const editValidDays = editForm.watch('validDays')
+
   const validDays = watch('validDays')
 
   function toggleDay(day: number) {
     const current = validDays ?? []
     setValue('validDays', current.includes(day) ? current.filter((d) => d !== day) : [...current, day], { shouldValidate: true })
+  }
+
+  function toggleEditDay(day: number) {
+    const current = editValidDays ?? []
+    editForm.setValue('validDays', current.includes(day) ? current.filter((d) => d !== day) : [...current, day], { shouldValidate: true })
+  }
+
+  function handleEditDeal(deal: Deal) {
+    setEditingDeal(deal)
+    editForm.reset({
+      title: deal.title,
+      description: deal.description ?? '',
+      dealTypeId: deal.dealType.id,
+      validDays: deal.activeDays,
+      startTime: deal.startTime ?? '',
+      endTime: deal.endTime ?? '',
+      endDate: deal.endDate ? new Date(deal.endDate).toLocaleDateString('en-CA', { timeZone: 'America/Detroit' }) : '',
+      priceNote: deal.priceNote ?? '',
+    })
+    setView('edit-deal')
   }
 
   async function onSubmitDeal(data: DealFormValues) {
@@ -82,6 +108,24 @@ export function VenuePortal({ venue, dealTypes, token }: VenuePortalProps) {
     reset()
     void utils.portal.getVenue.invalidate()
     setTimeout(() => { setAddSuccess(false); setView('deals') }, 2000)
+  }
+
+  async function onSubmitEdit(data: DealFormValues) {
+    if (!editingDeal) return
+    await updateDeal.mutateAsync({
+      token,
+      dealId: editingDeal.id,
+      title: data.title,
+      description: data.description,
+      activeDays: data.validDays,
+      startTime: data.startTime || null,
+      endTime: data.endTime || null,
+      endDate: data.endDate || null,
+      priceNote: data.priceNote || null,
+    })
+    setEditSuccess(true)
+    void utils.portal.getVenue.invalidate()
+    setTimeout(() => { setEditSuccess(false); setEditingDeal(null); setView('deals') }, 2000)
   }
 
   const activeDeals = venue.deals.filter((d) => d.status === 'ACTIVE')
@@ -122,7 +166,7 @@ export function VenuePortal({ venue, dealTypes, token }: VenuePortalProps) {
               key={v}
               onClick={() => setView(v)}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                view === v
+                (view === v || (view === 'edit-deal' && v === 'deals'))
                   ? 'border-brand-blue text-brand-blue'
                   : 'border-transparent text-text-secondary hover:text-text-primary'
               }`}
@@ -144,7 +188,7 @@ export function VenuePortal({ venue, dealTypes, token }: VenuePortalProps) {
                 </h2>
                 <div className="space-y-3">
                   {pendingDeals.map((deal) => (
-                    <DealRow key={deal.id} deal={deal} />
+                    <DealRow key={deal.id} deal={deal} onEdit={handleEditDeal} />
                   ))}
                 </div>
               </div>
@@ -169,7 +213,7 @@ export function VenuePortal({ venue, dealTypes, token }: VenuePortalProps) {
               ) : (
                 <div className="space-y-3">
                   {activeDeals.map((deal) => (
-                    <DealRow key={deal.id} deal={deal} />
+                    <DealRow key={deal.id} deal={deal} onEdit={handleEditDeal} />
                   ))}
                 </div>
               )}
@@ -244,6 +288,69 @@ export function VenuePortal({ venue, dealTypes, token }: VenuePortalProps) {
                   <Button type="button" variant="secondary" onClick={() => setView('deals')}>Cancel</Button>
                   <Button type="submit" variant="yellow" loading={isSubmitting || addDeal.isPending} className="flex-1">
                     Submit Deal
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* Edit deal form */}
+        {view === 'edit-deal' && editingDeal && (
+          <div className="max-w-xl">
+            <h2 className="text-lg font-bold text-text-primary mb-6">Edit Deal</h2>
+            {editSuccess ? (
+              <div className="flex flex-col items-center gap-3 py-8 text-center">
+                <CheckCircle className="h-12 w-12 text-green-500" />
+                <p className="font-semibold text-text-primary">Changes Submitted!</p>
+                <p className="text-sm text-text-secondary">
+                  {venue.autoApprove ? 'Your deal has been updated.' : "We'll review your changes shortly."}
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={editForm.handleSubmit(onSubmitEdit)} className="space-y-5">
+                <Input label="Deal Title" required error={editForm.formState.errors.title?.message} {...editForm.register('title')} />
+                <Textarea label="Description" rows={4} required error={editForm.formState.errors.description?.message} {...editForm.register('description')} />
+                <Select
+                  label="Deal Type"
+                  options={[{ value: '', label: 'Select…' }, ...dealTypes.map((d) => ({ value: d.id, label: `${d.icon ?? ''} ${d.name}` }))]}
+                  required
+                  error={editForm.formState.errors.dealTypeId?.message}
+                  {...editForm.register('dealTypeId')}
+                />
+                <div>
+                  <label className="text-sm font-medium text-text-primary block mb-2">Valid Days <span className="text-brand-red">*</span></label>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {DAY_NAMES_FULL.map((day, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => toggleEditDay(i)}
+                        className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
+                          editValidDays?.includes(i) ? 'bg-brand-blue border-brand-blue text-white' : 'bg-white border-surface-border text-text-secondary hover:border-brand-blue'
+                        }`}
+                      >
+                        {day.slice(0, 3)}
+                      </button>
+                    ))}
+                  </div>
+                  {editForm.formState.errors.validDays && <p className="mt-1 text-xs text-brand-red">{editForm.formState.errors.validDays.message}</p>}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input label="Start Time" type="time" {...editForm.register('startTime')} />
+                  <Input label="End Time" type="time" {...editForm.register('endTime')} />
+                </div>
+                <Input label="Expiry Date (optional)" type="date" {...editForm.register('endDate')} />
+                <Input label="Price Note (optional)" placeholder="e.g. $1 off all drafts" {...editForm.register('priceNote')} />
+                {updateDeal.error && (
+                  <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-brand-red">
+                    {updateDeal.error.message}
+                  </div>
+                )}
+                <div className="flex gap-3">
+                  <Button type="button" variant="secondary" onClick={() => setView('deals')}>Cancel</Button>
+                  <Button type="submit" variant="yellow" loading={editForm.formState.isSubmitting || updateDeal.isPending} className="flex-1">
+                    Save Changes
                   </Button>
                 </div>
               </form>
@@ -326,7 +433,7 @@ export function VenuePortal({ venue, dealTypes, token }: VenuePortalProps) {
   )
 }
 
-function DealRow({ deal }: { deal: Deal }) {
+function DealRow({ deal, onEdit }: { deal: Deal; onEdit?: (deal: Deal) => void }) {
   return (
     <div className="flex items-center gap-3 rounded-card border border-surface-border bg-white p-4">
       {deal.photos[0] && (
@@ -357,6 +464,16 @@ function DealRow({ deal }: { deal: Deal }) {
           <div className="flex items-center gap-1 text-xs text-text-muted">
             <MousePointerClick className="h-3 w-3" /> {deal.clicks}
           </div>
+        )}
+        {onEdit && (
+          <button
+            type="button"
+            onClick={() => onEdit(deal)}
+            className="rounded p-1 text-text-muted hover:text-brand-blue hover:bg-surface-bg transition-colors"
+            title="Edit deal"
+          >
+            <Edit2 className="h-3.5 w-3.5" />
+          </button>
         )}
       </div>
     </div>

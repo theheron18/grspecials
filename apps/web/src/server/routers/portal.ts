@@ -102,11 +102,10 @@ export const portalRouter = router({
     .mutation(async ({ ctx, input }) => {
       const venue = await ctx.prisma.venue.findUnique({
         where: { portalToken: input.token, portalActive: true },
-        select: { id: true },
+        select: { id: true, autoApprove: true },
       })
       if (!venue) throw new TRPCError({ code: 'UNAUTHORIZED' })
 
-      // Ensure deal belongs to venue
       const deal = await ctx.prisma.deal.findFirst({
         where: { id: input.dealId, venueId: venue.id },
       })
@@ -118,7 +117,7 @@ export const portalRouter = router({
         data: {
           ...data,
           endDate: endDate ? new Date(endDate) : undefined,
-          status: DealStatus.PENDING_REVIEW,
+          status: venue.autoApprove ? DealStatus.ACTIVE : DealStatus.PENDING_REVIEW,
         },
       })
     }),
