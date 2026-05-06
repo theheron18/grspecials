@@ -87,8 +87,8 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
       activeDays: deal?.activeDays ?? [0, 1, 2, 3, 4, 5, 6],
       startTime: deal?.startTime ?? '',
       endTime: deal?.endTime ?? '',
-      startDate: deal?.startDate ? deal.startDate.toISOString().slice(0, 10) : '',
-      endDate: deal?.endDate ? deal.endDate.toISOString().slice(0, 10) : '',
+      startDate: deal?.startDate ? deal.startDate.toLocaleDateString('en-CA', { timeZone: 'America/Detroit' }) : '',
+      endDate: deal?.endDate ? deal.endDate.toLocaleDateString('en-CA', { timeZone: 'America/Detroit' }) : '',
       priceNote: deal?.priceNote ?? '',
       adminNotes: deal?.adminNotes ?? '',
       metaTitle: deal?.metaTitle ?? '',
@@ -114,8 +114,8 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
       const created = await createDeal.mutateAsync({
         ...data,
         tags,
-        startDate: data.startDate ? new Date(data.startDate) : undefined,
-        endDate: data.endDate ? new Date(data.endDate) : undefined,
+        startDate: data.startDate ? new Date(data.startDate + 'T00:00:00') : undefined,
+        endDate: data.endDate ? new Date(data.endDate + 'T23:59:59') : undefined,
         photoUrls: pendingPhotoUrls.length ? pendingPhotoUrls : undefined,
       })
       router.push(`/admin/deals/${created.id}`)
@@ -124,8 +124,8 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
         id: deal!.id,
         ...data,
         tags,
-        startDate: data.startDate ? new Date(data.startDate) : null,
-        endDate: data.endDate ? new Date(data.endDate) : null,
+        startDate: data.startDate ? new Date(data.startDate + 'T00:00:00') : null,
+        endDate: data.endDate ? new Date(data.endDate + 'T23:59:59') : null,
         startTime: data.startTime || null,
         endTime: data.endTime || null,
         priceNote: data.priceNote || null,

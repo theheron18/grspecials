@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { format, formatDistanceToNow } from 'date-fns'
+import { format, formatDistanceToNow, isPast, differenceInDays } from 'date-fns'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -39,25 +39,15 @@ export function formatDealHours(startTime?: string | null, endTime?: string | nu
   return ''
 }
 
-// Dates are stored as UTC midnight (e.g. "2026-05-05T00:00:00Z").
-// Compare UTC date-only strings so neither timezone offset nor time-of-day
-// causes a false expiry.
-function toUTCDateStr(date: Date): string {
-  return date.toISOString().slice(0, 10)
-}
-
 export function getExpiryLabel(endDate: Date | null | undefined): {
   label: string
   urgent: boolean
 } | null {
   if (!endDate) return null
-  const endStr = toUTCDateStr(endDate)
-  const todayStr = toUTCDateStr(new Date())
-  const tomorrowStr = toUTCDateStr(new Date(Date.now() + 86_400_000))
-  if (endStr < todayStr) return { label: 'Expired', urgent: true }
-  if (endStr === todayStr) return { label: 'Expires today', urgent: true }
-  if (endStr === tomorrowStr) return { label: 'Expires tomorrow', urgent: true }
-  const days = Math.round((new Date(endStr).getTime() - new Date(todayStr).getTime()) / 86_400_000)
+  if (isPast(endDate)) return { label: 'Expired', urgent: true }
+  const days = differenceInDays(endDate, new Date())
+  if (days === 0) return { label: 'Expires today', urgent: true }
+  if (days === 1) return { label: 'Expires tomorrow', urgent: true }
   if (days <= 7) return { label: `Expires in ${days} days`, urgent: true }
   return { label: `Expires ${format(endDate, 'MMM d')}`, urgent: false }
 }
