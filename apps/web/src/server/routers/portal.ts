@@ -4,19 +4,6 @@ import { DealStatus, DealSource } from '@grspecials/db'
 import { slugify } from '@/lib/utils'
 import { TRPCError } from '@trpc/server'
 
-// Token-based procedures — no user session, authenticated by portalToken
-const portalProcedure = publicProcedure.use(async ({ ctx, next, rawInput }) => {
-  const input = rawInput as { token?: string }
-  if (!input?.token) throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Portal token required' })
-
-  const venue = await ctx.prisma.venue.findUnique({
-    where: { portalToken: input.token, portalActive: true },
-  })
-  if (!venue) throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid or revoked portal token' })
-
-  return next({ ctx: { ...ctx, venue } })
-})
-
 export const portalRouter = router({
   getVenue: publicProcedure
     .input(z.object({ token: z.string() }))

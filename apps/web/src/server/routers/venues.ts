@@ -71,7 +71,10 @@ export const venuesRouter = router({
     .input(
       z.object({
         status: z.nativeEnum(VenueStatus).optional(),
+        categoryId: z.string().optional(),
         q: z.string().optional(),
+        sort: z.enum(['name', 'category', 'neighborhood', 'status']).optional(),
+        dir: z.enum(['asc', 'desc']).optional().default('asc'),
         page: z.number().int().min(1).default(1),
         limit: z.number().int().min(1).max(50).default(20),
       }),
@@ -79,6 +82,7 @@ export const venuesRouter = router({
     .query(async ({ ctx, input }) => {
       const where: Prisma.VenueWhereInput = {
         ...(input.status && { status: input.status }),
+        ...(input.categoryId && { categoryId: input.categoryId }),
         ...(input.q && {
           OR: [
             { name: { contains: input.q, mode: 'insensitive' } },
@@ -87,10 +91,17 @@ export const venuesRouter = router({
         }),
       }
 
+      const orderBy: Prisma.VenueOrderByWithRelationInput =
+        input.sort === 'name' ? { name: input.dir }
+        : input.sort === 'category' ? { category: { name: input.dir } }
+        : input.sort === 'neighborhood' ? { neighborhood: input.dir }
+        : input.sort === 'status' ? { status: input.dir }
+        : { createdAt: 'desc' }
+
       const [venues, total] = await Promise.all([
         ctx.prisma.venue.findMany({
           where,
-          orderBy: { createdAt: 'desc' },
+          orderBy,
           skip: (input.page - 1) * input.limit,
           take: input.limit,
           include: {
@@ -115,6 +126,8 @@ export const venuesRouter = router({
         zip: z.string().optional(),
         phone: z.string().optional(),
         website: z.string().url().optional(),
+        facebook: z.string().optional(),
+        instagram: z.string().optional(),
         email: z.string().email().optional(),
         latitude: z.number().optional(),
         longitude: z.number().optional(),
@@ -141,6 +154,8 @@ export const venuesRouter = router({
         address: z.string().optional(),
         phone: z.string().optional().nullable(),
         website: z.string().optional().nullable(),
+        facebook: z.string().optional().nullable(),
+        instagram: z.string().optional().nullable(),
         email: z.string().optional().nullable(),
         latitude: z.number().optional().nullable(),
         longitude: z.number().optional().nullable(),

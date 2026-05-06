@@ -176,6 +176,8 @@ model Venue {
   zip         String?
   phone       String?
   website     String?
+  facebook    String?
+  instagram   String?
   email       String?
 
   latitude    Float?

@@ -41,14 +41,14 @@ interface DealType { id: string; name: string; icon?: string | null }
 interface Neighborhood { id: string; name: string }
 interface Venue { id: string; name: string; slug: string }
 interface Deal {
-  id: string; title: string; description: string; shortDesc?: string | null
+  id: string; title: string; slug: string; description: string; shortDesc?: string | null
   venueId: string; categoryId: string; dealTypeId: string; neighborhoodId?: string | null
   status: string; source: string; featured: boolean
   activeDays: number[]; startTime?: string | null; endTime?: string | null
   startDate?: Date | null; endDate?: Date | null; priceNote?: string | null
   adminNotes?: string | null; metaTitle?: string | null; metaDescription?: string | null
   tags?: string[]
-  venue: Venue; photos: { url: string; altText?: string | null }[]
+  venue: Venue; photos: { id: string; url: string; altText?: string | null }[]
 }
 
 interface Props {

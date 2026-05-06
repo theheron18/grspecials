@@ -95,7 +95,7 @@ Non-technical site owner. Tests via the live Vercel deployment. When something a
 
 Read CLAUDE.md for project context. The critical rules in CLAUDE.md are non-negotiable — do not ask me to confirm them. Before editing any file, check if it is mentioned in the CLAUDE.md critical rules section and apply those rules without exception.
 
-Session rules:
+### Session rules
 - Read only files directly relevant to the current task
 - Do not summarize files back to me after reading them
 - Do not explain what you're about to do — just do it
@@ -113,12 +113,12 @@ Session rules:
 - Before starting a task, confirm git status is clean — if there are uncommitted changes, stop and tell me
 - If you work around a non-obvious bug or discover a constraint not in CLAUDE.md, note it at the end of the task so I can decide whether to add it to CLAUDE.md
 
-Safety rules:
+### Safety rules
 - Never run database migrations automatically — show me the migration SQL first and wait for my approval
 - If a task requires a new environment variable, stop and tell me the name and where to add it before proceeding
 - For any changes to admin functionality or database queries, describe the change and its side effects and wait for my confirmation before making it
 
-Before marking any task complete:
+### Before marking any task complete
 - Run `npm run type-check` and fix all errors before stopping
 - Run `npm run build` locally and confirm it succeeds
 - If either fails, fix the errors before presenting the task as done

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { router, publicProcedure, adminProcedure } from '../trpc'
-import { DealStatus, DealSource, SubmissionStatus } from '@grspecials/db'
+import { DealStatus, DealSource } from '@grspecials/db'
 import { slugify } from '@/lib/utils'
 import { sendSubmissionConfirmation, sendDealApproved, sendDealRejected } from '@/lib/email'
 import { TRPCError } from '@trpc/server'

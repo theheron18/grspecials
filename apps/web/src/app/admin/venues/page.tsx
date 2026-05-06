@@ -2,31 +2,41 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { prisma } from '@grspecials/db'
-import { formatRelativeDate } from '@/lib/utils'
-import { Plus, ExternalLink } from 'lucide-react'
+import { Plus } from 'lucide-react'
+import { AdminVenuesTable } from '@/components/admin/AdminVenuesTable'
+import { Prisma } from '@grspecials/db'
 
 interface PageProps {
-  searchParams: { q?: string; page?: string; status?: string }
+  searchParams: { q?: string; page?: string; status?: string; categoryId?: string; sort?: string; dir?: string }
 }
 
 export default async function AdminVenuesPage({ searchParams }: PageProps) {
   const page = parseInt(searchParams.page ?? '1')
   const limit = 20
+  const dir = (searchParams.dir === 'desc' ? 'desc' : 'asc') as 'asc' | 'desc'
 
-  const where = {
+  const where: Prisma.VenueWhereInput = {
     ...(searchParams.status && { status: searchParams.status as 'ACTIVE' | 'INACTIVE' | 'PENDING_VERIFICATION' }),
+    ...(searchParams.categoryId && { categoryId: searchParams.categoryId }),
     ...(searchParams.q && {
       OR: [
-        { name: { contains: searchParams.q, mode: 'insensitive' as const } },
-        { address: { contains: searchParams.q, mode: 'insensitive' as const } },
+        { name: { contains: searchParams.q, mode: 'insensitive' } },
+        { address: { contains: searchParams.q, mode: 'insensitive' } },
       ],
     }),
   }
 
-  const [venues, total] = await Promise.all([
+  const orderBy: Prisma.VenueOrderByWithRelationInput =
+    searchParams.sort === 'name' ? { name: dir }
+    : searchParams.sort === 'category' ? { category: { name: dir } }
+    : searchParams.sort === 'neighborhood' ? { neighborhood: dir }
+    : searchParams.sort === 'status' ? { status: dir }
+    : { createdAt: 'desc' }
+
+  const [venues, total, categoryCounts] = await Promise.all([
     prisma.venue.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy,
       skip: (page - 1) * limit,
       take: limit,
       include: {
@@ -35,9 +45,25 @@ export default async function AdminVenuesPage({ searchParams }: PageProps) {
       },
     }),
     prisma.venue.count({ where }),
+    prisma.venueCategory.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        icon: true,
+        _count: { select: { venues: true } },
+      },
+    }),
   ])
 
   const pageCount = Math.ceil(total / limit)
+
+  function filterHref(updates: Record<string, string | undefined>) {
+    const next = { ...Object.fromEntries(Object.entries(searchParams).filter(([, v]) => v != null) as [string, string][]), ...updates }
+    Object.keys(next).forEach(k => next[k] === undefined && delete next[k])
+    return `/admin/venues?${new URLSearchParams(next as Record<string, string>).toString()}`
+  }
 
   return (
     <div className="space-y-6">
@@ -52,10 +78,29 @@ export default async function AdminVenuesPage({ searchParams }: PageProps) {
         </Link>
       </div>
 
+      {/* Category summary */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        {categoryCounts.map((cat) => (
+          <Link
+            key={cat.id}
+            href={filterHref({ categoryId: searchParams.categoryId === cat.id ? undefined : cat.id, page: '1' })}
+            className={`rounded-card border px-3 py-2.5 text-center transition-colors ${
+              searchParams.categoryId === cat.id
+                ? 'border-brand-blue bg-brand-blue/5'
+                : 'border-surface-border bg-white hover:border-brand-blue'
+            }`}
+          >
+            <div className="text-lg">{cat.icon ?? '🏢'}</div>
+            <div className="text-xs font-medium text-text-primary mt-0.5">{cat.name}</div>
+            <div className="text-xs text-text-muted">{cat._count.venues}</div>
+          </Link>
+        ))}
+      </div>
+
       {/* Filters */}
       <div className="flex gap-3 flex-wrap items-center">
-        {[['', 'All'], ['ACTIVE', 'Active'], ['PENDING_VERIFICATION', 'Pending'], ['INACTIVE', 'Inactive']].map(([v, label]) => (
-          <Link key={v} href={`/admin/venues?${new URLSearchParams({ ...(v && { status: v }), ...(searchParams.q && { q: searchParams.q }) }).toString()}`}
+        {([['', 'All'], ['ACTIVE', 'Active'], ['PENDING_VERIFICATION', 'Pending'], ['INACTIVE', 'Inactive']] as [string, string][]).map(([v, label]) => (
+          <Link key={v} href={filterHref({ status: v || undefined, page: '1' })}
             className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
               (searchParams.status ?? '') === v
                 ? 'bg-brand-blue border-brand-blue text-white'
@@ -64,82 +109,27 @@ export default async function AdminVenuesPage({ searchParams }: PageProps) {
             {label}
           </Link>
         ))}
-        <form action="/admin/venues" method="get" className="ml-auto">
+        <form action="/admin/venues" method="get" className="ml-auto flex gap-2">
           {searchParams.status && <input type="hidden" name="status" value={searchParams.status} />}
+          {searchParams.categoryId && <input type="hidden" name="categoryId" value={searchParams.categoryId} />}
           <input name="q" type="search" placeholder="Search venues…" defaultValue={searchParams.q}
             className="rounded-lg border border-surface-border px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20" />
         </form>
       </div>
 
-      {/* Table */}
-      <div className="rounded-card border border-surface-border bg-white overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-surface-bg border-b border-surface-border">
-            <tr>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary">Venue</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary hidden sm:table-cell">Category</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary hidden md:table-cell">Address</th>
-              <th className="text-center px-4 py-3 text-xs font-semibold text-text-secondary">Deals</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary hidden lg:table-cell">Flags</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-text-secondary">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-surface-border">
-            {venues.map((venue) => (
-              <tr key={venue.id} className="hover:bg-surface-bg">
-                <td className="px-4 py-3">
-                  <Link href={`/admin/venues/${venue.id}`} className="font-medium text-text-primary hover:text-brand-blue block truncate max-w-[180px]">
-                    {venue.name}
-                  </Link>
-                  <span className="text-xs text-text-muted">{venue.status}</span>
-                </td>
-                <td className="px-4 py-3 text-text-secondary text-xs hidden sm:table-cell">
-                  {venue.category.icon} {venue.category.name}
-                </td>
-                <td className="px-4 py-3 text-text-secondary text-xs hidden md:table-cell truncate max-w-[160px]">
-                  {venue.address}
-                </td>
-                <td className="px-4 py-3 text-center text-xs text-text-secondary">
-                  {venue._count.deals}
-                </td>
-                <td className="px-4 py-3 hidden lg:table-cell">
-                  <div className="flex gap-1">
-                    {venue.verified && <span className="text-xs text-brand-blue font-medium">✓ Verified</span>}
-                    {venue.premium && <span className="text-xs text-brand-yellow-dark font-medium">⭐ Premium</span>}
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex items-center justify-end gap-3">
-                    <Link href={`/admin/venues/${venue.id}`} className="text-xs text-brand-blue hover:underline">Edit</Link>
-                    <a href={`/venues/${venue.slug}`} target="_blank" className="text-xs text-text-muted hover:text-text-primary">
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                    <a href={`/venue/${venue.portalToken}`} target="_blank"
-                      className="text-xs text-text-muted hover:text-brand-blue" title="Open portal">
-                      Portal
-                    </a>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {venues.length === 0 && (
-          <div className="py-12 text-center text-text-muted text-sm">No venues found.</div>
-        )}
-      </div>
+      <AdminVenuesTable venues={venues as never} searchParams={searchParams} />
 
       {pageCount > 1 && (
         <div className="flex justify-center gap-2">
           {page > 1 && (
-            <Link href={`/admin/venues?${new URLSearchParams({ ...Object.fromEntries(Object.entries(searchParams).filter(([, v]) => v)), page: String(page - 1) }).toString()}`}
+            <Link href={filterHref({ page: String(page - 1) })}
               className="rounded-lg border border-surface-border px-3 py-1.5 text-sm hover:border-brand-blue transition-colors">
               ← Previous
             </Link>
           )}
           <span className="px-3 py-1.5 text-sm text-text-muted">Page {page} of {pageCount}</span>
           {page < pageCount && (
-            <Link href={`/admin/venues?${new URLSearchParams({ ...Object.fromEntries(Object.entries(searchParams).filter(([, v]) => v)), page: String(page + 1) }).toString()}`}
+            <Link href={filterHref({ page: String(page + 1) })}
               className="rounded-lg border border-surface-border px-3 py-1.5 text-sm hover:border-brand-blue transition-colors">
               Next →
             </Link>

@@ -22,6 +22,8 @@ const schema = z.object({
   zip: z.string().optional(),
   phone: z.string().optional(),
   website: z.string().url('Enter a valid URL').optional().or(z.literal('')),
+  facebook: z.string().optional(),
+  instagram: z.string().optional(),
   email: z.string().email('Enter a valid email').optional().or(z.literal('')),
   latitude: z.string().optional(),
   longitude: z.string().optional(),
@@ -41,7 +43,7 @@ interface Category { id: string; name: string; icon?: string | null }
 interface Venue {
   id: string; name: string; slug: string; description?: string | null
   address: string; city: string; state: string; zip?: string | null
-  phone?: string | null; website?: string | null; email?: string | null
+  phone?: string | null; website?: string | null; facebook?: string | null; instagram?: string | null; email?: string | null
   latitude?: number | null; longitude?: number | null; neighborhood?: string | null
   categoryId: string; status: string; verified: boolean; premium: boolean; autoApprove: boolean
   portalToken: string; logoUrl?: string | null; metaTitle?: string | null; metaDescription?: string | null
@@ -74,6 +76,8 @@ export function AdminVenueEditor({ venue, categories, isNew }: Props) {
       zip: venue?.zip ?? '',
       phone: venue?.phone ?? '',
       website: venue?.website ?? '',
+      facebook: venue?.facebook ?? '',
+      instagram: venue?.instagram ?? '',
       email: venue?.email ?? '',
       latitude: venue?.latitude?.toString() ?? '',
       longitude: venue?.longitude?.toString() ?? '',
@@ -115,6 +119,8 @@ export function AdminVenueEditor({ venue, categories, isNew }: Props) {
       latitude: data.latitude ? parseFloat(data.latitude) : undefined,
       longitude: data.longitude ? parseFloat(data.longitude) : undefined,
       website: data.website || undefined,
+      facebook: data.facebook || undefined,
+      instagram: data.instagram || undefined,
       email: data.email || undefined,
       phone: data.phone || undefined,
     }
@@ -221,6 +227,8 @@ export function AdminVenueEditor({ venue, categories, isNew }: Props) {
             <div className="sm:col-span-2">
               <Input label="Website" type="url" placeholder="https://" error={errors.website?.message} {...register('website')} />
             </div>
+            <Input label="Facebook URL" type="url" placeholder="https://facebook.com/…" {...register('facebook')} />
+            <Input label="Instagram URL" type="url" placeholder="https://instagram.com/…" {...register('instagram')} />
           </div>
         </Section>
 
