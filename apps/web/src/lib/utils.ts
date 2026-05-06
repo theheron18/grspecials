@@ -39,10 +39,11 @@ export function formatDealHours(startTime?: string | null, endTime?: string | nu
   return ''
 }
 
-// Compare dates as Eastern Time strings (YYYY-MM-DD) so Vercel's UTC clock
-// doesn't falsely expire deals before midnight in Grand Rapids.
-function toEasternDateStr(date: Date): string {
-  return date.toLocaleDateString('en-CA', { timeZone: 'America/Detroit' })
+// Dates are stored as UTC midnight (e.g. "2026-05-05T00:00:00Z").
+// Compare UTC date-only strings so neither timezone offset nor time-of-day
+// causes a false expiry.
+function toUTCDateStr(date: Date): string {
+  return date.toISOString().slice(0, 10)
 }
 
 export function getExpiryLabel(endDate: Date | null | undefined): {
@@ -50,9 +51,9 @@ export function getExpiryLabel(endDate: Date | null | undefined): {
   urgent: boolean
 } | null {
   if (!endDate) return null
-  const endStr = toEasternDateStr(endDate)
-  const todayStr = toEasternDateStr(new Date())
-  const tomorrowStr = toEasternDateStr(new Date(Date.now() + 86_400_000))
+  const endStr = toUTCDateStr(endDate)
+  const todayStr = toUTCDateStr(new Date())
+  const tomorrowStr = toUTCDateStr(new Date(Date.now() + 86_400_000))
   if (endStr < todayStr) return { label: 'Expired', urgent: true }
   if (endStr === todayStr) return { label: 'Expires today', urgent: true }
   if (endStr === tomorrowStr) return { label: 'Expires tomorrow', urgent: true }
