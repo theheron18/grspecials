@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd ../.. && npx prisma db push --schema=packages/db/prisma/schema.prisma --accept-data-loss && npx turbo run build --filter=@grspecials/web",
+  "buildCommand": "cd ../.. && npx turbo run build --filter=@grspecials/web",
   "outputDirectory": ".next",
   "installCommand": "npm ci",
   "framework": "nextjs",
