@@ -8,7 +8,7 @@ import { trpc } from '@/lib/trpc/client'
 import { Input, Textarea, Select } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { DAY_NAMES_FULL } from '@/lib/utils'
-import { Trash2, ExternalLink, Copy } from 'lucide-react'
+import { Trash2, ExternalLink, Copy, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { ImageUpload, PhotoGrid, PendingPhotoGrid } from '@/components/ui/ImageUpload'
 
@@ -377,6 +377,20 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
               })}
             </div>
           </div>
+          <div>
+            <p className="text-xs font-medium text-text-secondary mb-1.5">National drink days:</p>
+            <div className="space-y-2">
+              {Object.entries(DRINK_DAY_TAGS_BY_SEASON).map(([season, tags]) => (
+                <DrinkDaySeasonGroup
+                  key={season}
+                  season={season}
+                  tags={tags}
+                  tagsInput={tagsInput}
+                  setTagsInput={setTagsInput}
+                />
+              ))}
+            </div>
+          </div>
         </Section>
 
         {/* Admin notes */}
@@ -412,6 +426,63 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 // Inline venue search — debounced fetch from tRPC
 import React, { useEffect, useRef, useState as useStateR } from 'react'
+import { DRINK_DAY_TAGS_BY_SEASON } from '@/lib/drinkDays'
+
+function DrinkDaySeasonGroup({
+  season, tags, tagsInput, setTagsInput,
+}: {
+  season: string
+  tags: { label: string; tag: string }[]
+  tagsInput: string
+  setTagsInput: (v: string) => void
+}) {
+  const [open, setOpen] = useStateR(false)
+  const currentTags = tagsInput.split(',').map((t) => t.trim()).filter(Boolean)
+
+  function toggle(tag: string) {
+    if (currentTags.includes(tag)) {
+      setTagsInput(currentTags.filter((t) => t !== tag).join(', '))
+    } else {
+      setTagsInput([...currentTags, tag].join(', '))
+    }
+  }
+
+  const activeCount = tags.filter((t) => currentTags.includes(t.tag)).length
+
+  return (
+    <div className="border border-surface-border rounded-lg overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-text-secondary hover:bg-surface-bg"
+      >
+        <span>{season} {activeCount > 0 && <span className="ml-1 rounded-full bg-brand-blue text-white px-1.5 py-0.5">{activeCount}</span>}</span>
+        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="flex flex-wrap gap-1.5 p-2 border-t border-surface-border bg-surface-bg">
+          {tags.map(({ label, tag }) => {
+            const active = currentTags.includes(tag)
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => toggle(tag)}
+                className={`rounded-full px-2.5 py-1 text-xs font-medium border transition-colors ${
+                  active
+                    ? 'bg-brand-blue border-brand-blue text-white'
+                    : 'bg-white border-surface-border text-text-secondary hover:border-brand-blue'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function VenueSearch({ defaultValue, onSelect }: { defaultValue: string; onSelect: (v: { id: string; name: string }) => void }) {
   const [query, setQuery] = useStateR(defaultValue)

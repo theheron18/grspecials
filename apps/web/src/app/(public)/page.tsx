@@ -8,6 +8,7 @@ import { DealCard } from '@/components/deals/DealCard'
 import { DealCardSkeleton } from '@/components/ui/Skeleton'
 import { buildMeta } from '@/lib/seo'
 import { getTodaysHoliday } from '@/lib/holidays'
+import { getTodaysDrinkDay } from '@/lib/drinkDays'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = buildMeta()
@@ -73,6 +74,7 @@ export default async function HomePage() {
     getHomepageData(),
     getHolidayDeals(),
   ])
+  const drinkDay = getTodaysDrinkDay()
 
   const headline = config['hero_headline'] ?? "Grand Rapids' Best Deals & Specials"
   const subline = config['hero_subline'] ?? 'Find happy hours, daily specials, events, and sales near you.'
@@ -176,6 +178,19 @@ export default async function HomePage() {
               ))}
             </div>
           </section>
+        )}
+
+        {/* National drink day callout */}
+        {drinkDay && (
+          <div className="flex items-center gap-3 rounded-card border border-surface-border bg-white px-5 py-3.5">
+            <span className="text-2xl shrink-0">{drinkDay.emoji}</span>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-text-primary">
+                Today is <Link href={`/deals?tag=${drinkDay.tag}`} className="text-brand-blue hover:underline">{drinkDay.name}</Link>
+              </p>
+              <p className="text-xs text-text-secondary mt-0.5 truncate">{drinkDay.tagline}</p>
+            </div>
+          </div>
         )}
 
         {/* Featured deals */}
