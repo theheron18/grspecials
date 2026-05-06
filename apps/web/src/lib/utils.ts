@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { format, formatDistanceToNow, isPast, differenceInDays } from 'date-fns'
+import { format, formatDistanceToNow, differenceInDays, startOfDay } from 'date-fns'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -44,7 +44,7 @@ export function getExpiryLabel(endDate: Date | null | undefined): {
   urgent: boolean
 } | null {
   if (!endDate) return null
-  if (isPast(endDate)) return { label: 'Expired', urgent: true }
+  if (endDate < startOfDay(new Date())) return { label: 'Expired', urgent: true }
   const days = differenceInDays(endDate, new Date())
   if (days === 0) return { label: 'Expires today', urgent: true }
   if (days === 1) return { label: 'Expires tomorrow', urgent: true }
