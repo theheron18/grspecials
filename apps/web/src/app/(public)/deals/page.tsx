@@ -34,8 +34,10 @@ interface PageProps {
 async function getDeals(filters: DealFiltersType) {
   const { category, dealType, neighborhood, day, tag, q, sort, page = 1, limit = 24 } = filters
 
+  const now = new Date()
   const where = {
     status: 'ACTIVE' as const,
+    OR: [{ endDate: null }, { endDate: { gte: now } }],
     ...(category && { category: { slug: category } }),
     ...(dealType && { dealType: { slug: dealType } }),
     ...(neighborhood && { neighborhood: { slug: neighborhood } }),
