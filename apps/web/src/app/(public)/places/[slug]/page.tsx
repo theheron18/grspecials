@@ -145,7 +145,11 @@ export default async function PlacePage({ params }: PageProps) {
               {place.category.icon} {place.category.name}
             </p>
             {place.description && (
-              <p className="text-sm text-text-secondary mb-3">{place.description}</p>
+              <div className="text-sm text-text-secondary mb-3 space-y-2">
+                {place.description.split(/\n\n+/).map((para, i) => (
+                  <p key={i}>{para.trim()}</p>
+                ))}
+              </div>
             )}
             <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-text-secondary">
               <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
