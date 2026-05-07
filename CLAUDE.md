@@ -53,6 +53,9 @@ URL pattern: `/deals/[venueSlug]/[dealSlug]`. Never use `deal.id` or `venue.id` 
 **6. Next.js Image for external URLs**
 Allowed domains are in `apps/web/next.config.mjs` remotePatterns. Venue logo thumbnails in `DealCard.tsx` use `unoptimized` to bypass this check (safe for small fallback images).
 
+**8. Place descriptions render as paragraphs — use blank lines to separate**
+The public place page (`apps/web/src/app/(public)/places/[slug]/page.tsx`) splits descriptions on `\n\n` and renders each chunk as a `<p>`. In the admin textarea, separate paragraphs with a blank line. Single line breaks within a paragraph are fine.
+
 **7. All dates use Eastern Time (America/Detroit) — Vercel server runs UTC**
 Grand Rapids is Eastern Time. The Vercel server's `new Date()` is UTC, so naive comparisons break after 8 PM ET.
 - Get today's Eastern date: `new Date().toLocaleDateString('en-CA', { timeZone: 'America/Detroit' })` → returns `YYYY-MM-DD`
@@ -119,7 +122,7 @@ Read CLAUDE.md for project context. The critical rules in CLAUDE.md are non-nego
 - For any changes to admin functionality or database queries, describe the change and its side effects and wait for my confirmation before making it
 
 ### Before marking any task complete
-- Run `npm run type-check` and fix all errors before stopping
-- Run `npm run build` locally and confirm it succeeds
+- Run `npm run type-check` and fix all errors before stopping — note: `@grspecials/types` has a pre-existing type-check failure (tsc misconfiguration in that package); run `npx tsc --noEmit` from `apps/web/` directly to check only the web app
+- Run `npm run build` locally and confirm it succeeds — note: local builds fail on missing `NEXTAUTH_SECRET`/`NEXTAUTH_URL` env vars in worktree environments; this is expected and does not reflect a code error
 - If either fails, fix the errors before presenting the task as done
 - Never push code that fails a type check or build
