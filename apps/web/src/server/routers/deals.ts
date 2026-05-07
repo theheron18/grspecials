@@ -283,6 +283,8 @@ export const dealsRouter = router({
         photoUrls: z.array(z.string().url()).optional(),
         tags: z.array(z.string()).optional().default([]),
         status: z.nativeEnum(DealStatus).optional().default(DealStatus.ACTIVE),
+        linkUrl: z.string().url().optional(),
+        linkLabel: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -327,6 +329,8 @@ export const dealsRouter = router({
         metaTitle: z.string().optional().nullable(),
         metaDescription: z.string().optional().nullable(),
         tags: z.array(z.string()).optional(),
+        linkUrl: z.string().url().optional().nullable(),
+        linkLabel: z.string().optional().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

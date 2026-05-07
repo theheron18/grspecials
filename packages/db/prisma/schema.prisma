@@ -306,6 +306,9 @@ model Deal {
 
   tags        String[] @default([])
 
+  linkUrl     String?
+  linkLabel   String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -148,6 +148,18 @@ export default async function DealDetailPage({ params }: PageProps) {
               <p className="whitespace-pre-wrap leading-relaxed">{deal.description}</p>
             </div>
 
+            {/* External link CTA */}
+            {deal.linkUrl && (
+              <a
+                href={deal.linkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-blue/90 transition-colors"
+              >
+                {deal.linkLabel || 'Learn More'} →
+              </a>
+            )}
+
             {/* Deal details */}
             <div className="rounded-card border border-surface-border bg-white p-5 space-y-3">
               <h2 className="font-semibold text-text-primary">Deal Details</h2>

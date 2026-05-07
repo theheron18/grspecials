@@ -32,6 +32,8 @@ const schema = z.object({
   adminNotes: z.string().optional(),
   metaTitle: z.string().optional(),
   metaDescription: z.string().optional(),
+  linkUrl: z.string().optional(),
+  linkLabel: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -47,6 +49,7 @@ interface Deal {
   activeDays: number[]; startTime?: string | null; endTime?: string | null
   startDate?: Date | null; endDate?: Date | null; priceNote?: string | null
   adminNotes?: string | null; metaTitle?: string | null; metaDescription?: string | null
+  linkUrl?: string | null; linkLabel?: string | null
   tags?: string[]
   place: Place; photos: { id: string; url: string; altText?: string | null }[]
 }
@@ -93,6 +96,8 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
       adminNotes: deal?.adminNotes ?? '',
       metaTitle: deal?.metaTitle ?? '',
       metaDescription: deal?.metaDescription ?? '',
+      linkUrl: deal?.linkUrl ?? '',
+      linkLabel: deal?.linkLabel ?? '',
     },
   })
 
@@ -132,6 +137,8 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
         adminNotes: data.adminNotes || null,
         metaTitle: data.metaTitle || null,
         metaDescription: data.metaDescription || null,
+        linkUrl: data.linkUrl || null,
+        linkLabel: data.linkLabel || null,
       })
       router.refresh()
     }
@@ -184,6 +191,11 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
           <Input label="Title" required error={errors.title?.message} {...register('title')} />
           <Textarea label="Description" rows={5} required error={errors.description?.message} {...register('description')} />
           <Input label="Short Description (optional)" placeholder="One-line summary for cards" {...register('shortDesc')} />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input label="Link URL (optional)" placeholder="https://example.com/enter" {...register('linkUrl')} />
+            <Input label="Link Label (optional)" placeholder="e.g. Enter to Win, Get Tickets" {...register('linkLabel')} />
+          </div>
+          <p className="text-xs text-text-muted -mt-2">Add a button link on the deal page — e.g. to an entry form or ticket purchase.</p>
         </Section>
 
         {/* Venue + Classification */}
