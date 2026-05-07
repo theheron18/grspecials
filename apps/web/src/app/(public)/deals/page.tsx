@@ -144,7 +144,7 @@ export default async function DealsPage({ searchParams }: PageProps) {
           <MapViewSection filters={filters} />
         ) : (
           <>
-            <DealGrid deals={deals as never} />
+            <DealGrid deals={deals.map(({ venue, ...rest }) => ({ ...rest, place: venue }))} />
 
             {/* Pagination */}
             {pageCount > 1 && (

@@ -15,13 +15,13 @@ interface DealCardProps {
 export function DealCard({ deal, className, showSource = true }: DealCardProps) {
   const expiry = getExpiryLabel(deal.endDate)
   const heroPhoto = deal.photos[0]
-  const dealUrl = `/deals/${deal.venue.slug}/${deal.slug}`
+  const dealUrl = `/deals/${deal.place.slug}/${deal.slug}`
 
   return (
     <Link
       href={dealUrl}
       className={cn('deal-card block overflow-hidden', deal.featured && 'featured-glow', className)}
-      aria-label={`${deal.title} at ${deal.venue.name}`}
+      aria-label={`${deal.title} at ${deal.place.name}`}
     >
       {/* Image / placeholder */}
       <div className="relative h-44 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
@@ -38,10 +38,10 @@ export function DealCard({ deal, className, showSource = true }: DealCardProps) 
             className="flex h-full items-center justify-center"
             style={{ background: `linear-gradient(135deg, ${deal.category.color ?? '#F5C518'}22, ${deal.category.color ?? '#F5C518'}44)` }}
           >
-            {deal.venue.logoUrl ? (
+            {deal.place.logoUrl ? (
               <Image
-                src={deal.venue.logoUrl}
-                alt={deal.venue.name}
+                src={deal.place.logoUrl}
+                alt={deal.place.name}
                 width={80}
                 height={80}
                 className="object-contain rounded-xl"
@@ -82,11 +82,11 @@ export function DealCard({ deal, className, showSource = true }: DealCardProps) 
           {deal.title}
         </h3>
 
-        {/* Venue */}
+        {/* Place */}
         <p className="text-xs font-medium text-brand-blue truncate mb-2">
-          {deal.venue.name}
-          {deal.venue.verified && (
-            <span className="ml-1 text-brand-blue" title="Verified venue">✓</span>
+          {deal.place.name}
+          {deal.place.verified && (
+            <span className="ml-1 text-brand-blue" title="Verified place">✓</span>
           )}
         </p>
 
@@ -104,10 +104,10 @@ export function DealCard({ deal, className, showSource = true }: DealCardProps) 
               <span>{formatActiveDays(deal.activeDays)}</span>
             </div>
           )}
-          {deal.venue.neighborhood && (
+          {deal.place.neighborhood && (
             <div className="flex items-center gap-1.5 text-xs text-text-secondary">
               <MapPin className="h-3 w-3 shrink-0" />
-              <span>{deal.venue.neighborhood}</span>
+              <span>{deal.place.neighborhood}</span>
               {deal.distance !== undefined && (
                 <span className="text-text-muted">· {getDistanceLabel(deal.distance)}</span>
               )}

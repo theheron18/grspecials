@@ -13,7 +13,7 @@ interface Deal {
   slug: string
   status: string
   createdAt: Date
-  venue: { name: string; slug: string }
+  place: { name: string; slug: string }
   category: { name: string; icon: string | null }
   dealType: { name: string }
 }
@@ -91,7 +91,7 @@ export function AdminDealsTable({ deals }: { deals: Deal[] }) {
               />
             </th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary">Deal</th>
-            <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary hidden sm:table-cell">Venue</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary hidden sm:table-cell">Place</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary hidden md:table-cell">Type</th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary">Status</th>
             <th className="text-right px-4 py-3 text-xs font-semibold text-text-secondary">Added</th>
@@ -117,7 +117,7 @@ export function AdminDealsTable({ deals }: { deals: Deal[] }) {
                   <span className="text-xs text-text-muted">{deal.category.icon} {deal.category.name}</span>
                 </div>
               </td>
-              <td className="px-4 py-3 text-text-secondary text-xs hidden sm:table-cell truncate max-w-[160px]">{deal.venue.name}</td>
+              <td className="px-4 py-3 text-text-secondary text-xs hidden sm:table-cell truncate max-w-[160px]">{deal.place.name}</td>
               <td className="px-4 py-3 text-text-secondary text-xs hidden md:table-cell">{deal.dealType.name}</td>
               <td className="px-4 py-3">
                 <StatusBadge status={deal.status} />
@@ -128,7 +128,7 @@ export function AdminDealsTable({ deals }: { deals: Deal[] }) {
               <td className="px-4 py-3 text-right">
                 <div className="flex items-center justify-end gap-2">
                   <Link href={`/admin/deals/${deal.id}`} className="text-xs text-brand-blue hover:underline">Edit</Link>
-                  <Link href={`/deals/${deal.venue.slug}/${deal.slug}`} className="text-xs text-text-muted hover:text-text-primary" target="_blank">View</Link>
+                  <Link href={`/deals/${deal.place.slug}/${deal.slug}`} className="text-xs text-text-muted hover:text-text-primary" target="_blank">View</Link>
                 </div>
               </td>
             </tr>

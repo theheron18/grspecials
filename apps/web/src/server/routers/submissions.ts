@@ -6,8 +6,8 @@ import { sendSubmissionConfirmation, sendDealApproved, sendDealRejected } from '
 import { TRPCError } from '@trpc/server'
 
 const submissionInput = z.object({
-  venueName: z.string().min(2).max(100),
-  venueAddress: z.string().min(5).max(200),
+  placeName: z.string().min(2).max(100),
+  placeAddress: z.string().min(5).max(200),
   categorySlug: z.string(),
   dealTitle: z.string().min(5).max(150),
   dealDescription: z.string().min(20).max(2000),
@@ -35,7 +35,7 @@ export const submissionsRouter = router({
 
       // Find or stub venue
       let venue = await ctx.prisma.venue.findFirst({
-        where: { name: { equals: input.venueName, mode: 'insensitive' } },
+        where: { name: { equals: input.placeName, mode: 'insensitive' } },
       })
 
       if (!venue) {
@@ -46,7 +46,7 @@ export const submissionsRouter = router({
         if (mapboxToken) {
           try {
             const geoRes = await fetch(
-              `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(input.venueAddress)}.json?access_token=${mapboxToken}&country=US&proximity=-85.6681,42.9634&limit=1`,
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(input.placeAddress)}.json?access_token=${mapboxToken}&country=US&proximity=-85.6681,42.9634&limit=1`,
             )
             const geoJson = await geoRes.json() as { features?: { center: [number, number] }[] }
             const coords = geoJson.features?.[0]?.center
@@ -55,15 +55,15 @@ export const submissionsRouter = router({
               latitude = coords[1]
             }
           } catch {
-            // Geocoding failed — venue will appear on list but not map until admin adds coords
+            // Geocoding failed — place will appear on list but not map until admin adds coords
           }
         }
 
         venue = await ctx.prisma.venue.create({
           data: {
-            name: input.venueName,
-            slug: `${slugify(input.venueName)}-${Date.now()}`,
-            address: input.venueAddress,
+            name: input.placeName,
+            slug: `${slugify(input.placeName)}-${Date.now()}`,
+            address: input.placeAddress,
             categoryId: category.id,
             status: 'PENDING_VERIFICATION',
             latitude,

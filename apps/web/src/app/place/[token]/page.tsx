@@ -1,16 +1,16 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@grspecials/db'
-import { VenuePortal } from '@/components/portal/VenuePortal'
+import { PlacePortal } from '@/components/portal/VenuePortal'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Venue Portal — GRspecials.com', robots: { index: false } }
+export const metadata: Metadata = { title: 'Place Portal — GRspecials.com', robots: { index: false } }
 
 interface PageProps {
   params: { token: string }
 }
 
-export default async function VenuePortalPage({ params }: PageProps) {
-  const venue = await prisma.venue.findUnique({
+export default async function PlacePortalPage({ params }: PageProps) {
+  const place = await prisma.venue.findUnique({
     where: { portalToken: params.token, portalActive: true },
     include: {
       category: true,
@@ -24,12 +24,12 @@ export default async function VenuePortalPage({ params }: PageProps) {
     },
   })
 
-  if (!venue) notFound()
+  if (!place) notFound()
 
   const dealTypes = await prisma.dealType.findMany({
     where: { active: true },
     orderBy: { sortOrder: 'asc' },
   })
 
-  return <VenuePortal venue={venue as never} dealTypes={dealTypes} token={params.token} />
+  return <PlacePortal place={place as never} dealTypes={dealTypes} token={params.token} />
 }

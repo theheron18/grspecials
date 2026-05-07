@@ -30,7 +30,7 @@ async function getHolidayDeals() {
   })
 
   if (deals.length === 0) return null
-  return { holiday, deals }
+  return { holiday, deals: deals.map(({ venue, ...rest }) => ({ ...rest, place: venue })) }
 }
 
 async function getHomepageData() {
@@ -66,7 +66,12 @@ async function getHomepageData() {
   ])
 
   const configMap = Object.fromEntries(config.map((c) => [c.key, c.value]))
-  return { featured, recent, categories, config: configMap }
+  return {
+    featured: featured.map(({ venue, ...rest }) => ({ ...rest, place: venue })),
+    recent: recent.map(({ venue, ...rest }) => ({ ...rest, place: venue })),
+    categories,
+    config: configMap,
+  }
 }
 
 export default async function HomePage() {
@@ -180,7 +185,7 @@ export default async function HomePage() {
             </div>
             <div className="px-5 pb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {holidayData.deals.map((deal) => (
-                <DealCard key={deal.id} deal={deal as never} />
+                <DealCard key={deal.id} deal={deal as never /* place already mapped */} />
               ))}
             </div>
           </section>
@@ -214,7 +219,7 @@ export default async function HomePage() {
             <Suspense fallback={<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{Array(3).fill(0).map((_, i) => <DealCardSkeleton key={i} />)}</div>}>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {featured.map((deal) => (
-                  <DealCard key={deal.id} deal={deal as never} />
+                  <DealCard key={deal.id} deal={deal as never /* place already mapped */} />
                 ))}
               </div>
             </Suspense>
@@ -266,7 +271,7 @@ export default async function HomePage() {
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {recent.map((deal) => (
-              <DealCard key={deal.id} deal={deal as never} />
+              <DealCard key={deal.id} deal={deal as never /* place already mapped */} />
             ))}
           </div>
         </section>

@@ -31,7 +31,7 @@ export async function DealsMapSection({ filters }: { filters: DealFilters }) {
       slug: `${d.venue.slug}/${d.slug}`,
       category: d.category.slug,
       categoryColor: d.category.color ?? '#1A56DB',
-      venueName: d.venue.name,
+      placeName: d.venue.name,
       featured: d.featured,
     }))
 

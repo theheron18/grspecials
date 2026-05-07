@@ -87,7 +87,7 @@ export function sourceLabel(source: string): string {
   const map: Record<string, string> = {
     ADMIN_POSTED: 'Staff Pick',
     COMMUNITY_SUBMITTED: 'Community',
-    VENUE_SUBMITTED: 'Venue',
+    VENUE_SUBMITTED: 'Place',
     AUTO_SCRAPED: 'Auto-found',
   }
   return map[source] ?? source

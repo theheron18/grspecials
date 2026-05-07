@@ -3,14 +3,14 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { prisma } from '@grspecials/db'
 import { Plus } from 'lucide-react'
-import { AdminVenuesTable } from '@/components/admin/AdminVenuesTable'
+import { AdminPlacesTable } from '@/components/admin/AdminVenuesTable'
 import { Prisma } from '@grspecials/db'
 
 interface PageProps {
   searchParams: { q?: string; page?: string; status?: string; categoryId?: string; sort?: string; dir?: string }
 }
 
-export default async function AdminVenuesPage({ searchParams }: PageProps) {
+export default async function AdminPlacesPage({ searchParams }: PageProps) {
   const page = parseInt(searchParams.page ?? '1')
   const limit = 20
   const dir = (searchParams.dir === 'desc' ? 'desc' : 'asc') as 'asc' | 'desc'
@@ -33,7 +33,7 @@ export default async function AdminVenuesPage({ searchParams }: PageProps) {
     : searchParams.sort === 'status' ? { status: dir }
     : { createdAt: 'desc' }
 
-  const [venues, total, categoryCounts] = await Promise.all([
+  const [places, total, categoryCounts] = await Promise.all([
     prisma.venue.findMany({
       where,
       orderBy,
@@ -62,19 +62,19 @@ export default async function AdminVenuesPage({ searchParams }: PageProps) {
   function filterHref(updates: Record<string, string | undefined>) {
     const next = { ...Object.fromEntries(Object.entries(searchParams).filter(([, v]) => v != null) as [string, string][]), ...updates }
     Object.keys(next).forEach(k => next[k] === undefined && delete next[k])
-    return `/admin/venues?${new URLSearchParams(next as Record<string, string>).toString()}`
+    return `/admin/places?${new URLSearchParams(next as Record<string, string>).toString()}`
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-text-primary">Venues</h1>
-          <p className="text-sm text-text-secondary">{total} total venues</p>
+          <h1 className="text-xl font-bold text-text-primary">Places</h1>
+          <p className="text-sm text-text-secondary">{total} total places</p>
         </div>
-        <Link href="/admin/venues/new"
+        <Link href="/admin/places/new"
           className="flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-sm font-medium text-white hover:bg-brand-blue-dark transition-colors">
-          <Plus className="h-4 w-4" /> Add Venue
+          <Plus className="h-4 w-4" /> Add Place
         </Link>
       </div>
 
@@ -109,15 +109,15 @@ export default async function AdminVenuesPage({ searchParams }: PageProps) {
             {label}
           </Link>
         ))}
-        <form action="/admin/venues" method="get" className="ml-auto flex gap-2">
+        <form action="/admin/places" method="get" className="ml-auto flex gap-2">
           {searchParams.status && <input type="hidden" name="status" value={searchParams.status} />}
           {searchParams.categoryId && <input type="hidden" name="categoryId" value={searchParams.categoryId} />}
-          <input name="q" type="search" placeholder="Search venues…" defaultValue={searchParams.q}
+          <input name="q" type="search" placeholder="Search places…" defaultValue={searchParams.q}
             className="rounded-lg border border-surface-border px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20" />
         </form>
       </div>
 
-      <AdminVenuesTable venues={venues as never} searchParams={searchParams} />
+      <AdminPlacesTable places={places as never} searchParams={searchParams} />
 
       {pageCount > 1 && (
         <div className="flex justify-center gap-2">

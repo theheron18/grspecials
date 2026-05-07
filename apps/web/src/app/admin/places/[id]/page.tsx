@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@grspecials/db'
-import { AdminVenueEditor } from '@/components/admin/AdminVenueEditor'
+import { AdminPlaceEditor } from '@/components/admin/AdminVenueEditor'
 
 interface PageProps {
   params: { id: string }
 }
 
-export default async function AdminVenueEditPage({ params }: PageProps) {
-  const [venue, categories] = await Promise.all([
+export default async function AdminPlaceEditPage({ params }: PageProps) {
+  const [place, categories] = await Promise.all([
     prisma.venue.findUnique({
       where: { id: params.id },
       include: {
@@ -19,7 +19,7 @@ export default async function AdminVenueEditPage({ params }: PageProps) {
     prisma.venueCategory.findMany({ orderBy: { sortOrder: 'asc' } }),
   ])
 
-  if (!venue) notFound()
+  if (!place) notFound()
 
-  return <AdminVenueEditor venue={venue as never} categories={categories} isNew={false} />
+  return <AdminPlaceEditor place={place as never} categories={categories} isNew={false} />
 }

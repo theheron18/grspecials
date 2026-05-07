@@ -94,7 +94,7 @@ export default async function AdminDealsPage({ searchParams }: PageProps) {
       </div>
 
       {/* Table */}
-      <AdminDealsTable deals={deals} />
+      <AdminDealsTable deals={deals.map(({ venue, ...rest }) => ({ ...rest, place: venue }))} />
 
       {/* Pagination */}
       {pageCount > 1 && (

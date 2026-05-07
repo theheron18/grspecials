@@ -26,8 +26,8 @@ export const adminRouter = router({
     return {
       activeDeals,
       pendingSubmissions,
-      totalVenues,
-      newVenuesThisWeek: newVenues,
+      totalPlaces: totalVenues,
+      newPlacesThisWeek: newVenues,
       scraperSourcesActive: activeScrapers,
       scraperLastRunAt: lastScrape?.startedAt ?? null,
       scraperLastStatus: lastScrape?.status ?? null,

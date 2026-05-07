@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { prisma } from '@grspecials/db'
-import { buildMeta, venueJsonLd, breadcrumbJsonLd } from '@/lib/seo'
+import { buildMeta, placeJsonLd, breadcrumbJsonLd } from '@/lib/seo'
 import { DealCard } from '@/components/deals/DealCard'
 import { MapPin, Phone, Globe, ChevronRight } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -28,7 +28,7 @@ const dealCardSelect = {
   photos: { select: { url: true, altText: true }, orderBy: { sortOrder: 'asc' as const }, take: 1 },
 }
 
-async function getVenue(slug: string) {
+async function getPlace(slug: string) {
   return prisma.venue.findFirst({
     where: { slug, status: 'ACTIVE' },
     include: {
@@ -43,54 +43,57 @@ async function getVenue(slug: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const venue = await getVenue(params.slug)
-  if (!venue) return {}
+  const place = await getPlace(params.slug)
+  if (!place) return {}
 
-  const dealCount = venue.deals.length
-  const description = venue.metaDescription
-    ?? venue.description?.slice(0, 160)
-    ?? `${dealCount} active deal${dealCount !== 1 ? 's' : ''} at ${venue.name} in Grand Rapids, MI.`
+  const dealCount = place.deals.length
+  const description = place.metaDescription
+    ?? place.description?.slice(0, 160)
+    ?? `${dealCount} active deal${dealCount !== 1 ? 's' : ''} at ${place.name} in Grand Rapids, MI.`
 
   return buildMeta({
-    title: `${venue.name} — Deals & Specials`,
+    title: `${place.name} — Deals & Specials`,
     description,
-    alternates: { canonical: `/venues/${venue.slug}` },
+    alternates: { canonical: `/places/${place.slug}` },
     openGraph: {
       type: 'website',
-      title: venue.metaTitle ?? venue.name,
+      title: place.metaTitle ?? place.name,
       description,
-      ...(venue.logoUrl && { images: [{ url: venue.logoUrl, width: 400, height: 400, alt: venue.name }] }),
+      ...(place.logoUrl && { images: [{ url: place.logoUrl, width: 400, height: 400, alt: place.name }] }),
     },
   })
 }
 
-export default async function VenuePage({ params }: PageProps) {
-  const venue = await getVenue(params.slug)
-  if (!venue) notFound()
+export default async function PlacePage({ params }: PageProps) {
+  const place = await getPlace(params.slug)
+  if (!place) notFound()
 
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${venue.name} ${venue.address} ${venue.city} ${venue.state}`)}`
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.name} ${place.address} ${place.city} ${place.state}`)}`
+
+  // Map Prisma's venue relation to place for DealCard type compatibility
+  const deals = place.deals.map(({ venue, ...rest }) => ({ ...rest, place: venue }))
 
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(venueJsonLd({
-            ...venue,
-            city: venue.city,
-            state: venue.state,
-            neighborhood: venue.neighborhood,
-            latitude: venue.latitude,
-            longitude: venue.longitude,
-            verified: venue.verified,
-            premium: venue.premium,
-            logoUrl: venue.logoUrl,
-            activeDealsCount: venue.deals.length,
-            category: venue.category,
-            phone: venue.phone ?? undefined,
-            website: venue.website ?? undefined,
-            description: venue.description ?? undefined,
-            zip: venue.zip ?? undefined,
+          __html: JSON.stringify(placeJsonLd({
+            ...place,
+            city: place.city,
+            state: place.state,
+            neighborhood: place.neighborhood,
+            latitude: place.latitude,
+            longitude: place.longitude,
+            verified: place.verified,
+            premium: place.premium,
+            logoUrl: place.logoUrl,
+            activeDealsCount: place.deals.length,
+            category: place.category,
+            phone: place.phone ?? undefined,
+            website: place.website ?? undefined,
+            description: place.description ?? undefined,
+            zip: place.zip ?? undefined,
           })),
         }}
       />
@@ -100,7 +103,7 @@ export default async function VenuePage({ params }: PageProps) {
           __html: JSON.stringify(breadcrumbJsonLd([
             { name: 'Home', url: '/' },
             { name: 'Deals', url: '/deals' },
-            { name: venue.name, url: `/venues/${venue.slug}` },
+            { name: place.name, url: `/places/${place.slug}` },
           ])),
         }}
       />
@@ -112,55 +115,55 @@ export default async function VenuePage({ params }: PageProps) {
           <ChevronRight className="h-3 w-3" />
           <Link href="/deals" className="hover:text-brand-blue">Deals</Link>
           <ChevronRight className="h-3 w-3" />
-          <span className="text-text-secondary">{venue.name}</span>
+          <span className="text-text-secondary">{place.name}</span>
         </nav>
 
-        {/* Venue header */}
+        {/* Place header */}
         <div className="rounded-card border border-surface-border bg-white p-6 flex flex-col sm:flex-row gap-5">
-          {venue.logoUrl && (
+          {place.logoUrl && (
             <div className="shrink-0">
               <div className="relative h-20 w-20 rounded-xl overflow-hidden border border-surface-border bg-surface-bg">
-                <Image src={venue.logoUrl} alt={venue.name} fill className="object-contain p-1.5" unoptimized />
+                <Image src={place.logoUrl} alt={place.name} fill className="object-contain p-1.5" unoptimized />
               </div>
             </div>
           )}
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h1 className="text-xl font-bold text-text-primary">{venue.name}</h1>
-              {venue.verified && (
+              <h1 className="text-xl font-bold text-text-primary">{place.name}</h1>
+              {place.verified && (
                 <span className="inline-flex items-center rounded-full bg-brand-blue/10 px-2 py-0.5 text-xs font-medium text-brand-blue">
                   ✓ Verified
                 </span>
               )}
-              {venue.premium && (
+              {place.premium && (
                 <span className="inline-flex items-center rounded-full bg-brand-yellow/15 px-2 py-0.5 text-xs font-medium text-brand-yellow-dark">
                   ⭐ Premium
                 </span>
               )}
             </div>
             <p className="text-sm text-text-muted mb-3">
-              {venue.category.icon} {venue.category.name}
+              {place.category.icon} {place.category.name}
             </p>
-            {venue.description && (
-              <p className="text-sm text-text-secondary mb-3">{venue.description}</p>
+            {place.description && (
+              <p className="text-sm text-text-secondary mb-3">{place.description}</p>
             )}
             <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-text-secondary">
               <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-1.5 hover:text-brand-blue">
                 <MapPin className="h-3.5 w-3.5 shrink-0" />
-                {venue.address}, {venue.city}, {venue.state}
+                {place.address}, {place.city}, {place.state}
               </a>
-              {venue.phone && (
-                <a href={`tel:${venue.phone}`} className="flex items-center gap-1.5 hover:text-brand-blue">
+              {place.phone && (
+                <a href={`tel:${place.phone}`} className="flex items-center gap-1.5 hover:text-brand-blue">
                   <Phone className="h-3.5 w-3.5 shrink-0" />
-                  {venue.phone}
+                  {place.phone}
                 </a>
               )}
-              {venue.website && (
-                <a href={venue.website} target="_blank" rel="noopener noreferrer"
+              {place.website && (
+                <a href={place.website} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-1.5 hover:text-brand-blue">
                   <Globe className="h-3.5 w-3.5 shrink-0" />
-                  {venue.website.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}
+                  {place.website.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}
                 </a>
               )}
             </div>
@@ -171,11 +174,11 @@ export default async function VenuePage({ params }: PageProps) {
         <section>
           <h2 className="text-base font-semibold text-text-primary mb-4">
             Active Deals
-            <span className="ml-2 text-sm font-normal text-text-muted">({venue.deals.length})</span>
+            <span className="ml-2 text-sm font-normal text-text-muted">({place.deals.length})</span>
           </h2>
-          {venue.deals.length > 0 ? (
+          {deals.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {venue.deals.map((deal) => (
+              {deals.map((deal) => (
                 <DealCard key={deal.id} deal={deal} showSource={false} />
               ))}
             </div>

@@ -5,10 +5,10 @@ import { slugify } from '@/lib/utils'
 import { TRPCError } from '@trpc/server'
 
 export const portalRouter = router({
-  getVenue: publicProcedure
+  getPlace: publicProcedure
     .input(z.object({ token: z.string() }))
     .query(async ({ ctx, input }) => {
-      const venue = await ctx.prisma.venue.findUnique({
+      const place = await ctx.prisma.venue.findUnique({
         where: { portalToken: input.token, portalActive: true },
         include: {
           category: true,
@@ -21,8 +21,8 @@ export const portalRouter = router({
           },
         },
       })
-      if (!venue) throw new TRPCError({ code: 'NOT_FOUND', message: 'Venue not found or portal inactive' })
-      return venue
+      if (!place) throw new TRPCError({ code: 'NOT_FOUND', message: 'Place not found or portal inactive' })
+      return place
     }),
 
   addDeal: publicProcedure

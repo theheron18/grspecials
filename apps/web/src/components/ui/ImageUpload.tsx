@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { UPLOAD_HINT, UPLOAD_MAX_BYTES, UPLOAD_ALLOWED_TYPES } from '@/lib/upload-config'
 
 interface Props {
-  folder: 'deals' | 'venues'
+  folder: 'deals' | 'places'
   onUploaded: (url: string) => void
   label?: string
 }

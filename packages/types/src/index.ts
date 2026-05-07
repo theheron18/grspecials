@@ -41,7 +41,7 @@ export interface DealCard {
   priceNote?: string | null
   views: number
   createdAt: Date
-  venue: {
+  place: {
     id: string
     name: string
     slug: string
@@ -88,7 +88,7 @@ export interface DealDetail extends DealCard {
   metaTitle?: string | null
   metaDescription?: string | null
   ogImageUrl?: string | null
-  venue: DealCard['venue'] & {
+  place: DealCard['place'] & {
     phone?: string | null
     website?: string | null
     email?: string | null
@@ -98,9 +98,9 @@ export interface DealDetail extends DealCard {
   }
 }
 
-// ─── Venue card ───────────────────────────────────────────────────────────────
+// ─── Place card ───────────────────────────────────────────────────────────────
 
-export interface VenueCard {
+export interface PlaceCard {
   id: string
   name: string
   slug: string
@@ -143,8 +143,8 @@ export interface DealFilters {
 // ─── Submission form ──────────────────────────────────────────────────────────
 
 export interface DealSubmissionInput {
-  venueName: string
-  venueAddress: string
+  placeName: string
+  placeAddress: string
   categorySlug: string
   dealTitle: string
   dealDescription: string
@@ -165,8 +165,8 @@ export interface DealSubmissionInput {
 export interface AdminStats {
   activeDeals: number
   pendingSubmissions: number
-  totalVenues: number
-  newVenuesThisWeek: number
+  totalPlaces: number
+  newPlacesThisWeek: number
   scraperSourcesActive: number
   scraperLastRunAt?: Date | null
   scraperSuccessRate?: number
@@ -182,13 +182,13 @@ export interface MapPin {
   slug: string
   category: string
   categoryColor: string
-  venueName: string
+  placeName: string
   featured: boolean
 }
 
-// ─── Restaurant portal ────────────────────────────────────────────────────────
+// ─── Place portal ─────────────────────────────────────────────────────────────
 
-export interface PortalVenue {
+export interface PortalPlace {
   id: string
   name: string
   slug: string
@@ -225,7 +225,7 @@ export interface PortalDeal {
 export interface ParsedDeal {
   title: string
   description: string
-  venueName?: string
+  placeName?: string
   dealTypeSuggestion?: string
   startTime?: string
   endTime?: string
