@@ -53,6 +53,13 @@ URL pattern: `/deals/[venueSlug]/[dealSlug]`. Never use `deal.id` or `venue.id` 
 **6. Next.js Image for external URLs**
 Allowed domains are in `apps/web/next.config.mjs` remotePatterns. Venue logo thumbnails in `DealCard.tsx` use `unoptimized` to bypass this check (safe for small fallback images).
 
+**9. Prisma schema changes require regenerating the client in the main repo**
+When running in a worktree, `@grspecials/db` resolves via symlink to the main repo's `packages/db`, so TypeScript always reads the Prisma client from the main repo's `node_modules/.prisma/client`. After any schema change:
+1. Update the schema in both the worktree and the main repo's `packages/db/prisma/schema.prisma`
+2. Copy the main repo's `packages/db/.env` into the worktree's `packages/db/.env`, then run `npx prisma db push` from the worktree's `packages/db`
+3. Run `npx prisma generate` from the main repo's `packages/db` to update the shared Prisma client types
+Type errors like "Property X does not exist on type" for Prisma models are almost always this — the client hasn't been regenerated in the main repo yet.
+
 **8. Place descriptions render as paragraphs — use blank lines to separate**
 The public place page (`apps/web/src/app/(public)/places/[slug]/page.tsx`) splits descriptions on `\n\n` and renders each chunk as a `<p>`. In the admin textarea, separate paragraphs with a blank line. Single line breaks within a paragraph are fine.
 
