@@ -62,7 +62,7 @@ export default async function DealDetailPage({ params }: PageProps) {
       {/* JSON-LD */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(dealJsonLd(deal as never)) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(dealJsonLd({ ...deal, place: deal.venue } as never)) }}
       />
       <script
         type="application/ld+json"
