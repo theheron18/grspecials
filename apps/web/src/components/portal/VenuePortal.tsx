@@ -21,7 +21,7 @@ interface Deal {
   dealType: DealType
   photos: { url: string }[]
 }
-interface Venue {
+interface Place {
   id: string; name: string; address: string; phone?: string | null
   website?: string | null; email?: string | null; logoUrl?: string | null
   verified: boolean; premium: boolean; autoApprove: boolean
@@ -29,8 +29,8 @@ interface Venue {
   deals: Deal[]
 }
 
-interface VenuePortalProps {
-  venue: Venue
+interface PlacePortalProps {
+  place: Place
   dealTypes: DealType[]
   token: string
 }
@@ -50,7 +50,8 @@ type DealFormValues = z.infer<typeof dealSchema>
 
 type PortalView = 'deals' | 'add-deal' | 'edit-deal' | 'stats'
 
-export function VenuePortal({ venue, dealTypes, token }: VenuePortalProps) {
+export function PlacePortal({ place, dealTypes, token }: PlacePortalProps) {
+  const venue = place
   const [view, setView] = useState<PortalView>('deals')
   const [addSuccess, setAddSuccess] = useState(false)
   const [editSuccess, setEditSuccess] = useState(false)
@@ -106,7 +107,7 @@ export function VenuePortal({ venue, dealTypes, token }: VenuePortalProps) {
     await addDeal.mutateAsync({ token, ...data, activeDays: data.validDays })
     setAddSuccess(true)
     reset()
-    void utils.portal.getVenue.invalidate()
+    void utils.portal.getPlace.invalidate()
     setTimeout(() => { setAddSuccess(false); setView('deals') }, 2000)
   }
 
@@ -124,7 +125,7 @@ export function VenuePortal({ venue, dealTypes, token }: VenuePortalProps) {
       priceNote: data.priceNote || null,
     })
     setEditSuccess(true)
-    void utils.portal.getVenue.invalidate()
+    void utils.portal.getPlace.invalidate()
     setTimeout(() => { setEditSuccess(false); setEditingDeal(null); setView('deals') }, 2000)
   }
 
@@ -152,7 +153,7 @@ export function VenuePortal({ venue, dealTypes, token }: VenuePortalProps) {
             </div>
           </div>
           <div className="text-xs text-text-muted text-right hidden sm:block">
-            <p>Venue Portal</p>
+            <p>Place Portal</p>
             <a href="/" className="text-brand-blue hover:underline">GRspecials.com</a>
           </div>
         </div>

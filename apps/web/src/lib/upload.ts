@@ -16,7 +16,7 @@ function getS3() {
 }
 
 export async function directUpload(
-  folder: 'deals' | 'venues',
+  folder: 'deals' | 'places',
   buffer: Buffer,
   contentType: string,
   ext: string,

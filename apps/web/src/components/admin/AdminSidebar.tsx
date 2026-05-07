@@ -13,7 +13,7 @@ import { useState } from 'react'
 const NAV = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Deals', href: '/admin/deals', icon: FileText },
-  { label: 'Venues', href: '/admin/venues', icon: Building2 },
+  { label: 'Places', href: '/admin/places', icon: Building2 },
   { label: 'Moderation', href: '/admin/moderation', icon: ClipboardList },
   { label: 'Scraper', href: '/admin/scraper', icon: Bot },
   { label: 'Analytics', href: '/admin/analytics', icon: BarChart2 },

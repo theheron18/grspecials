@@ -11,8 +11,8 @@ import { DAY_NAMES_FULL } from '@/lib/utils'
 import { CheckCircle } from 'lucide-react'
 
 const schema = z.object({
-  venueName: z.string().min(2, 'Required').max(100),
-  venueAddress: z.string().min(5, 'Required').max(200),
+  placeName: z.string().min(2, 'Required').max(100),
+  placeAddress: z.string().min(5, 'Required').max(200),
   categorySlug: z.string().min(1, 'Select a category'),
   dealTitle: z.string().min(5, 'Required — at least 5 characters').max(150),
   dealDescription: z.string().min(20, 'Please describe the deal in at least 20 characters').max(2000),
@@ -99,20 +99,20 @@ export function SubmitDealForm({ categories, dealTypes }: SubmitDealFormProps) {
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Input
-            label="Venue / Business Name"
+            label="Place / Business Name"
             placeholder="e.g. Founders Brewing Co."
-            error={errors.venueName?.message}
+            error={errors.placeName?.message}
             required
-            {...register('venueName')}
+            {...register('placeName')}
           />
         </div>
         <div className="sm:col-span-2">
           <Input
-            label="Venue Address"
+            label="Place Address"
             placeholder="e.g. 235 Grandville Ave SW, Grand Rapids, MI"
-            error={errors.venueAddress?.message}
+            error={errors.placeAddress?.message}
             required
-            {...register('venueAddress')}
+            {...register('placeAddress')}
           />
         </div>
         <Select

@@ -60,8 +60,8 @@ export async function sendDealExpiring(to: string, dealTitle: string, expiryDate
   await sendEmail({ to, templateSlug: 'deal-expiring', vars: { dealTitle, expiryDate, renewUrl } })
 }
 
-export async function sendVenuePortalInvite(to: string, venueName: string, portalUrl: string) {
-  await sendEmail({ to, templateSlug: 'venue-portal-invite', vars: { venueName, portalUrl } })
+export async function sendPlacePortalInvite(to: string, placeName: string, portalUrl: string) {
+  await sendEmail({ to, templateSlug: 'venue-portal-invite', vars: { venueName: placeName, portalUrl } })
 }
 
 export async function sendContactEmail(name: string, senderEmail: string, message: string) {

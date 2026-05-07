@@ -34,11 +34,11 @@ export default async function SubmitDealPage() {
       </div>
 
       <p className="mt-4 text-center text-xs text-text-muted">
-        Venue submitting your own deals?{' '}
+        Place owner submitting your own deals?{' '}
         <a href="mailto:hello@grspecials.com" className="text-brand-blue hover:underline">
           Contact us
         </a>{' '}
-        for a venue portal link.
+        for a place portal link.
       </p>
     </div>
   )

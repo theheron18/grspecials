@@ -32,7 +32,7 @@ export default async function AdminDashboard() {
   const stats = [
     { label: 'Active Deals', value: activeDeals, icon: FileText, color: '#1A56DB', href: '/admin/deals' },
     { label: 'Pending Review', value: pendingSubmissions, icon: ClipboardList, color: pendingSubmissions > 0 ? '#F59E0B' : '#059669', href: '/admin/moderation', alert: pendingSubmissions > 0 },
-    { label: 'Active Venues', value: totalVenues, icon: Building2, color: '#7C3AED', href: '/admin/venues' },
+    { label: 'Active Places', value: totalVenues, icon: Building2, color: '#7C3AED', href: '/admin/places' },
     { label: 'Scraper Sources', value: scraperSources, icon: Bot, color: '#6B7280', href: '/admin/scraper' },
   ]
 

@@ -25,9 +25,10 @@ export default async function AdminDealEditPage({ params }: PageProps) {
 
   if (!deal) notFound()
 
+  const { venue, ...dealRest } = deal
   return (
     <AdminDealEditor
-      deal={deal as never}
+      deal={{ ...dealRest, place: venue } as never}
       categories={categories}
       dealTypes={dealTypes}
       neighborhoods={neighborhoods}

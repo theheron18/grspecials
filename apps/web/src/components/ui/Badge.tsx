@@ -43,7 +43,7 @@ export function SourceBadge({ source }: { source: string }) {
   const map: Record<string, { label: string; color: string }> = {
     ADMIN_POSTED: { label: 'Staff Pick', color: '#1A56DB' },
     COMMUNITY_SUBMITTED: { label: 'Community', color: '#059669' },
-    VENUE_SUBMITTED: { label: 'Venue', color: '#7C3AED' },
+    VENUE_SUBMITTED: { label: 'Place', color: '#7C3AED' },
     AUTO_SCRAPED: { label: 'Auto-found', color: '#6B7280' },
   }
   const info = map[source] ?? { label: source, color: '#6B7280' }

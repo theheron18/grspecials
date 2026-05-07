@@ -27,7 +27,7 @@ export function SiteFooter() {
             <ul className="space-y-2">
               {[
                 ['All Deals', '/deals'],
-                ['Venues', '/venues'],
+                ['Places', '/places'],
                 ['Happy Hours', '/deals?dealType=happy-hour'],
                 ['Daily Specials', '/deals?dealType=daily-special'],
                 ['Events', '/deals?dealType=event-deal'],
@@ -49,7 +49,7 @@ export function SiteFooter() {
             <ul className="space-y-2">
               {[
                 ['Submit a Deal', '/submit-a-deal'],
-                ['Venue Portal', '/venue'],
+                ['Place Portal', '/place'],
                 ['Featured Listings', '/advertise'],
                 ['Contact Us', '/contact'],
               ].map(([label, href]) => (

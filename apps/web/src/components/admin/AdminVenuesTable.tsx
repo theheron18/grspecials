@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc/client'
 import { Copy, ExternalLink } from 'lucide-react'
 
-interface Venue {
+interface Place {
   id: string
   name: string
   slug: string
@@ -20,13 +20,13 @@ interface Venue {
 }
 
 interface Props {
-  venues: Venue[]
+  places: Place[]
   searchParams: Record<string, string | undefined>
 }
 
-export function AdminVenuesTable({ venues, searchParams }: Props) {
+export function AdminPlacesTable({ places, searchParams }: Props) {
   const router = useRouter()
-  const update = trpc.venues.update.useMutation({ onSuccess: () => router.refresh() })
+  const update = trpc.places.update.useMutation({ onSuccess: () => router.refresh() })
 
   const sort = searchParams.sort
   const dir = searchParams.dir ?? 'asc'
@@ -38,7 +38,7 @@ export function AdminVenuesTable({ venues, searchParams }: Props) {
     )
     params.set('sort', col)
     params.set('dir', newDir)
-    return `/admin/venues?${params.toString()}`
+    return `/admin/places?${params.toString()}`
   }
 
   function SortHeader({ col, label }: { col: string; label: string }) {
@@ -50,16 +50,16 @@ export function AdminVenuesTable({ venues, searchParams }: Props) {
     )
   }
 
-  function toggleStatus(venue: Venue) {
-    update.mutate({ id: venue.id, status: venue.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE' })
+  function toggleStatus(place: Place) {
+    update.mutate({ id: place.id, status: place.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE' })
   }
 
-  function toggleFeatured(venue: Venue) {
-    update.mutate({ id: venue.id, premium: !venue.premium })
+  function toggleFeatured(place: Place) {
+    update.mutate({ id: place.id, premium: !place.premium })
   }
 
-  function toggleVerified(venue: Venue) {
-    update.mutate({ id: venue.id, verified: !venue.verified })
+  function toggleVerified(place: Place) {
+    update.mutate({ id: place.id, verified: !place.verified })
   }
 
   return (
@@ -68,7 +68,7 @@ export function AdminVenuesTable({ venues, searchParams }: Props) {
         <thead className="bg-surface-bg border-b border-surface-border">
           <tr>
             <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary">
-              <SortHeader col="name" label="Venue" />
+              <SortHeader col="name" label="Place" />
             </th>
             <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary hidden sm:table-cell">
               <SortHeader col="category" label="Category" />
@@ -86,49 +86,49 @@ export function AdminVenuesTable({ venues, searchParams }: Props) {
           </tr>
         </thead>
         <tbody className="divide-y divide-surface-border">
-          {venues.map((venue) => {
-            const isPending = update.isPending && (update.variables as { id: string })?.id === venue.id
-            const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/venue/${venue.portalToken}`
+          {places.map((place) => {
+            const isPending = update.isPending && (update.variables as { id: string })?.id === place.id
+            const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/place/${place.portalToken}`
             return (
-              <tr key={venue.id} className={`hover:bg-surface-bg transition-opacity ${isPending ? 'opacity-50' : ''}`}>
+              <tr key={place.id} className={`hover:bg-surface-bg transition-opacity ${isPending ? 'opacity-50' : ''}`}>
                 <td className="px-4 py-3">
-                  <Link href={`/admin/venues/${venue.id}`} className="font-medium text-text-primary hover:text-brand-blue block truncate max-w-[180px]">
-                    {venue.name}
+                  <Link href={`/admin/places/${place.id}`} className="font-medium text-text-primary hover:text-brand-blue block truncate max-w-[180px]">
+                    {place.name}
                   </Link>
                 </td>
                 <td className="px-4 py-3 text-text-secondary text-xs hidden sm:table-cell">
-                  {venue.category.icon} {venue.category.name}
+                  {place.category.icon} {place.category.name}
                 </td>
                 <td className="px-4 py-3 text-text-secondary text-xs hidden md:table-cell">
-                  {venue.neighborhood ?? '—'}
+                  {place.neighborhood ?? '—'}
                 </td>
                 <td className="px-4 py-3">
                   <button
                     type="button"
-                    onClick={() => toggleStatus(venue)}
-                    disabled={isPending || venue.status === 'PENDING_VERIFICATION'}
-                    title={venue.status === 'PENDING_VERIFICATION' ? 'Edit venue to change status' : undefined}
+                    onClick={() => toggleStatus(place)}
+                    disabled={isPending || place.status === 'PENDING_VERIFICATION'}
+                    title={place.status === 'PENDING_VERIFICATION' ? 'Edit place to change status' : undefined}
                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium transition-opacity hover:opacity-70 disabled:cursor-default ${
-                      venue.status === 'ACTIVE'
+                      place.status === 'ACTIVE'
                         ? 'bg-emerald-50 text-emerald-700'
-                        : venue.status === 'PENDING_VERIFICATION'
+                        : place.status === 'PENDING_VERIFICATION'
                         ? 'bg-amber-50 text-amber-700'
                         : 'bg-gray-100 text-gray-500'
                     }`}
                   >
-                    {venue.status === 'ACTIVE' ? 'Active' : venue.status === 'PENDING_VERIFICATION' ? 'Pending' : 'Inactive'}
+                    {place.status === 'ACTIVE' ? 'Active' : place.status === 'PENDING_VERIFICATION' ? 'Pending' : 'Inactive'}
                   </button>
                 </td>
                 <td className="px-4 py-3 text-center text-xs text-text-secondary">
-                  {venue._count.deals}
+                  {place._count.deals}
                 </td>
                 <td className="px-4 py-3 text-center hidden lg:table-cell">
                   <button
                     type="button"
-                    onClick={() => toggleFeatured(venue)}
+                    onClick={() => toggleFeatured(place)}
                     disabled={isPending}
-                    title={venue.premium ? 'Featured — click to remove' : 'Not featured — click to feature'}
-                    className={`text-base leading-none transition-opacity hover:opacity-70 disabled:opacity-50 ${venue.premium ? 'opacity-100' : 'opacity-20'}`}
+                    title={place.premium ? 'Featured — click to remove' : 'Not featured — click to feature'}
+                    className={`text-base leading-none transition-opacity hover:opacity-70 disabled:opacity-50 ${place.premium ? 'opacity-100' : 'opacity-20'}`}
                   >
                     ⭐
                   </button>
@@ -136,10 +136,10 @@ export function AdminVenuesTable({ venues, searchParams }: Props) {
                 <td className="px-4 py-3 text-center hidden lg:table-cell">
                   <button
                     type="button"
-                    onClick={() => toggleVerified(venue)}
+                    onClick={() => toggleVerified(place)}
                     disabled={isPending}
-                    title={venue.verified ? 'Verified — click to remove' : 'Not verified — click to verify'}
-                    className={`text-sm font-bold transition-colors hover:opacity-70 disabled:opacity-50 ${venue.verified ? 'text-brand-blue' : 'text-gray-300'}`}
+                    title={place.verified ? 'Verified — click to remove' : 'Not verified — click to verify'}
+                    className={`text-sm font-bold transition-colors hover:opacity-70 disabled:opacity-50 ${place.verified ? 'text-brand-blue' : 'text-gray-300'}`}
                   >
                     ✓
                   </button>
@@ -154,10 +154,10 @@ export function AdminVenuesTable({ venues, searchParams }: Props) {
                     >
                       <Copy className="h-3.5 w-3.5" />
                     </button>
-                    <Link href={`/admin/venues/${venue.id}`} className="text-xs text-brand-blue hover:underline">
+                    <Link href={`/admin/places/${place.id}`} className="text-xs text-brand-blue hover:underline">
                       Edit
                     </Link>
-                    <a href={`/venues/${venue.slug}`} target="_blank" rel="noopener noreferrer" className="text-text-muted hover:text-text-primary">
+                    <a href={`/places/${place.slug}`} target="_blank" rel="noopener noreferrer" className="text-text-muted hover:text-text-primary">
                       <ExternalLink className="h-3 w-3" />
                     </a>
                   </div>
@@ -167,8 +167,8 @@ export function AdminVenuesTable({ venues, searchParams }: Props) {
           })}
         </tbody>
       </table>
-      {venues.length === 0 && (
-        <div className="py-12 text-center text-text-muted text-sm">No venues found.</div>
+      {places.length === 0 && (
+        <div className="py-12 text-center text-text-muted text-sm">No places found.</div>
       )}
     </div>
   )

@@ -11,12 +11,12 @@ import { ClickTracker } from './ClickTracker'
 import type { Metadata } from 'next'
 
 interface PageProps {
-  params: { venueSlug: string; dealSlug: string }
+  params: { placeSlug: string; dealSlug: string }
 }
 
-async function getDeal(venueSlug: string, dealSlug: string) {
+async function getDeal(placeSlug: string, dealSlug: string) {
   return prisma.deal.findFirst({
-    where: { slug: dealSlug, status: 'ACTIVE', venue: { slug: venueSlug } },
+    where: { slug: dealSlug, status: 'ACTIVE', venue: { slug: placeSlug } },
     include: {
       venue: true,
       category: true,
@@ -28,7 +28,7 @@ async function getDeal(venueSlug: string, dealSlug: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const deal = await getDeal(params.venueSlug, params.dealSlug)
+  const deal = await getDeal(params.placeSlug, params.dealSlug)
   if (!deal) return {}
 
   return buildMeta({
@@ -48,14 +48,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function DealDetailPage({ params }: PageProps) {
-  const deal = await getDeal(params.venueSlug, params.dealSlug)
+  const deal = await getDeal(params.placeSlug, params.dealSlug)
   if (!deal) notFound()
 
   await prisma.deal.update({ where: { id: deal.id }, data: { views: { increment: 1 } } })
 
   const expiry = getExpiryLabel(deal.endDate)
   const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://grspecials.com'
-  const dealUrl = `${BASE_URL}/deals/${params.venueSlug}/${params.dealSlug}`
+  const dealUrl = `${BASE_URL}/deals/${params.placeSlug}/${params.dealSlug}`
 
   return (
     <>
@@ -72,7 +72,7 @@ export default async function DealDetailPage({ params }: PageProps) {
               { name: 'Home', url: '/' },
               { name: 'Deals', url: '/deals' },
               { name: deal.category.name, url: `/deals?category=${deal.category.slug}` },
-              { name: deal.title, url: `/deals/${params.venueSlug}/${params.dealSlug}` },
+              { name: deal.title, url: `/deals/${params.placeSlug}/${params.dealSlug}` },
             ]),
           ),
         }}
@@ -208,7 +208,7 @@ export default async function DealDetailPage({ params }: PageProps) {
                 <div>
                   <h2 className="font-semibold text-text-primary text-sm">{deal.venue.name}</h2>
                   {deal.venue.verified && (
-                    <span className="text-xs text-brand-blue">✓ Verified Venue</span>
+                    <span className="text-xs text-brand-blue">✓ Verified Place</span>
                   )}
                   <p className="text-xs text-text-muted mt-0.5">{deal.category.name}</p>
                 </div>
@@ -247,7 +247,7 @@ export default async function DealDetailPage({ params }: PageProps) {
 
             {/* Submit deal CTA */}
             <div className="rounded-card border border-surface-border bg-surface-bg p-4 text-center">
-              <p className="text-xs text-text-secondary mb-2">Know a deal this venue is missing?</p>
+              <p className="text-xs text-text-secondary mb-2">Know a deal this place is missing?</p>
               <Link
                 href="/submit-a-deal"
                 className="text-xs font-medium text-brand-blue hover:underline"

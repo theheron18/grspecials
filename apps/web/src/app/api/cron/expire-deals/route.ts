@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 
   for (const deal of expiring) {
     if (!deal.venue.email || !deal.endDate) continue
-    const renewUrl = `${process.env.NEXT_PUBLIC_APP_URL}/venue/${deal.venue.portalToken}`
+    const renewUrl = `${process.env.NEXT_PUBLIC_APP_URL}/place/${deal.venue.portalToken}`
     await sendDealExpiring(
       deal.venue.email,
       deal.title,

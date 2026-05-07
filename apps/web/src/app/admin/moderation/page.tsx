@@ -23,7 +23,7 @@ export default async function AdminModerationPage() {
           {deals.length} deal{deals.length !== 1 ? 's' : ''} pending review
         </p>
       </div>
-      <ModerationQueue deals={deals as never} />
+      <ModerationQueue deals={deals.map(({ venue, ...rest }) => ({ ...rest, place: venue }))} />
     </div>
   )
 }

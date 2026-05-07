@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import type { DealDetail, VenueCard } from '@grspecials/types'
+import type { DealDetail, PlaceCard } from '@grspecials/types'
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://grspecials.com'
 const SITE_NAME = 'GRspecials.com'
@@ -40,7 +40,7 @@ export function dealJsonLd(deal: DealDetail) {
     '@type': 'Offer',
     name: deal.title,
     description: deal.description,
-    url: `${BASE_URL}/deals/${deal.venue.slug}/${deal.slug}`,
+    url: `${BASE_URL}/deals/${deal.place.slug}/${deal.slug}`,
     priceCurrency: 'USD',
     price: deal.discountedPrice?.toString(),
     availability: 'https://schema.org/InStock',
@@ -48,40 +48,40 @@ export function dealJsonLd(deal: DealDetail) {
     priceValidUntil: deal.endDate?.toISOString(),
     seller: {
       '@type': 'LocalBusiness',
-      name: deal.venue.name,
+      name: deal.place.name,
       address: {
         '@type': 'PostalAddress',
-        streetAddress: deal.venue.address,
+        streetAddress: deal.place.address,
         addressLocality: 'Grand Rapids',
         addressRegion: 'MI',
         addressCountry: 'US',
       },
-      telephone: deal.venue.phone,
-      url: deal.venue.website,
+      telephone: deal.place.phone,
+      url: deal.place.website,
     },
   }
 }
 
-export function venueJsonLd(venue: VenueCard & { phone?: string; website?: string; description?: string; zip?: string }) {
+export function placeJsonLd(place: PlaceCard & { phone?: string; website?: string; description?: string; zip?: string }) {
   return {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
-    name: venue.name,
-    description: venue.description,
-    url: venue.website,
-    telephone: venue.phone,
+    name: place.name,
+    description: place.description,
+    url: place.website,
+    telephone: place.phone,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: venue.address,
-      addressLocality: venue.city,
-      addressRegion: venue.state,
-      postalCode: venue.zip,
+      streetAddress: place.address,
+      addressLocality: place.city,
+      addressRegion: place.state,
+      postalCode: place.zip,
       addressCountry: 'US',
     },
-    geo: venue.latitude && venue.longitude
-      ? { '@type': 'GeoCoordinates', latitude: venue.latitude, longitude: venue.longitude }
+    geo: place.latitude && place.longitude
+      ? { '@type': 'GeoCoordinates', latitude: place.latitude, longitude: place.longitude }
       : undefined,
-    image: venue.logoUrl,
+    image: place.logoUrl,
   }
 }
 

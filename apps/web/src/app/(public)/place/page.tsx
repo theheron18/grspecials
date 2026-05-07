@@ -4,12 +4,12 @@ import { LayoutDashboard, Mail } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = buildMeta({
-  title: 'Venue Portal — Manage Your Deals',
-  description: 'Venue owners: access your GRspecials portal to manage your deals and specials.',
+  title: 'Place Portal — Manage Your Deals',
+  description: 'Place owners: access your GRspecials portal to manage your deals and specials.',
   robots: { index: false, follow: false },
 })
 
-export default function VenuePortalLandingPage() {
+export default function PlacePortalLandingPage() {
   return (
     <div className="mx-auto max-w-lg px-4 py-16 text-center space-y-6">
       <div className="flex justify-center">
@@ -19,7 +19,7 @@ export default function VenuePortalLandingPage() {
       </div>
 
       <div>
-        <h1 className="text-2xl font-bold text-text-primary">Venue Portal</h1>
+        <h1 className="text-2xl font-bold text-text-primary">Place Portal</h1>
         <p className="mt-2 text-text-secondary">
           Manage your deals and specials on GRspecials.com.
         </p>
@@ -27,10 +27,10 @@ export default function VenuePortalLandingPage() {
 
       <div className="rounded-card border border-surface-border bg-white p-6 text-left space-y-4">
         <p className="text-sm text-text-secondary">
-          Your venue portal link is unique to your business and was sent to your email when your venue was set up. It looks like:
+          Your place portal link is unique to your business and was sent to your email when your place was set up. It looks like:
         </p>
         <code className="block rounded-lg bg-surface-bg border border-surface-border px-3 py-2 text-xs text-text-secondary">
-          grspecials.com/venue/<span className="text-brand-blue">your-private-token</span>
+          grspecials.com/place/<span className="text-brand-blue">your-private-token</span>
         </code>
         <p className="text-sm text-text-secondary">
           Paste your full link into the browser address bar to access your portal.
@@ -43,7 +43,7 @@ export default function VenuePortalLandingPage() {
           <span className="text-sm font-medium text-text-primary">Don't have a portal link?</span>
         </div>
         <p className="text-sm text-text-secondary mb-3">
-          If your venue is listed on GRspecials.com and you haven't received your link, reach out and we'll send it to you.
+          If your place is listed on GRspecials.com and you haven't received your link, reach out and we'll send it to you.
         </p>
         <Link
           href="/submit-a-deal"

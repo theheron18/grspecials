@@ -107,7 +107,7 @@ export function DealsMap({ pins, center = [-85.6681, 42.9634], zoom = 12, onPinC
             ×
           </button>
           <p className="font-semibold text-sm text-text-primary line-clamp-2">{selectedPin.title}</p>
-          <p className="text-xs text-text-secondary mt-0.5">{selectedPin.venueName}</p>
+          <p className="text-xs text-text-secondary mt-0.5">{selectedPin.placeName}</p>
           <a
             href={`/deals/${selectedPin.slug}`}
             className="mt-2 inline-block text-xs font-medium text-brand-blue hover:underline"

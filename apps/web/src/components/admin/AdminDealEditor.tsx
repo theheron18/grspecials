@@ -16,7 +16,7 @@ const schema = z.object({
   title: z.string().min(3),
   description: z.string().min(10),
   shortDesc: z.string().optional(),
-  venueId: z.string().min(1, 'Select a venue'),
+  venueId: z.string().min(1, 'Select a place'),
   categoryId: z.string().min(1, 'Select a category'),
   dealTypeId: z.string().min(1, 'Select a deal type'),
   neighborhoodId: z.string().optional(),
@@ -39,7 +39,7 @@ type FormValues = z.infer<typeof schema>
 interface Category { id: string; name: string; icon?: string | null }
 interface DealType { id: string; name: string; icon?: string | null }
 interface Neighborhood { id: string; name: string }
-interface Venue { id: string; name: string; slug: string }
+interface Place { id: string; name: string; slug: string }
 interface Deal {
   id: string; title: string; slug: string; description: string; shortDesc?: string | null
   venueId: string; categoryId: string; dealTypeId: string; neighborhoodId?: string | null
@@ -48,7 +48,7 @@ interface Deal {
   startDate?: Date | null; endDate?: Date | null; priceNote?: string | null
   adminNotes?: string | null; metaTitle?: string | null; metaDescription?: string | null
   tags?: string[]
-  venue: Venue; photos: { id: string; url: string; altText?: string | null }[]
+  place: Place; photos: { id: string; url: string; altText?: string | null }[]
 }
 
 interface Props {
@@ -150,8 +150,8 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
     router.push(`/admin/deals/${copy.id}`)
   }
 
-  const [venues, setVenues] = React.useState<Venue[]>(deal?.venue ? [deal.venue] : [])
-  const [venueSearch, setVenueSearch] = React.useState(deal?.venue?.name ?? '')
+  const [places, setPlaces] = React.useState<Place[]>(deal?.place ? [deal.place] : [])
+  const [placeSearch, setPlaceSearch] = React.useState(deal?.place?.name ?? '')
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -159,7 +159,7 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
         <div>
           <h1 className="text-xl font-bold text-text-primary">{isNew ? 'Add New Deal' : 'Edit Deal'}</h1>
           {deal && (
-            <Link href={`/deals/${deal.venue.slug}/${deal.slug}`} target="_blank" className="text-xs text-brand-blue hover:underline flex items-center gap-1 mt-0.5">
+            <Link href={`/deals/${deal.place.slug}/${deal.slug}`} target="_blank" className="text-xs text-brand-blue hover:underline flex items-center gap-1 mt-0.5">
               View live <ExternalLink className="h-3 w-3" />
             </Link>
           )}
@@ -191,9 +191,9 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="text-sm font-medium text-text-primary block mb-1.5">
-                Venue <span className="text-brand-red">*</span>
+                Place <span className="text-brand-red">*</span>
               </label>
-              <VenueSearch defaultValue={deal?.venue?.name ?? ''} onSelect={(v) => setValue('venueId', v.id)} />
+              <PlaceSearch defaultValue={deal?.place?.name ?? ''} onSelect={(v) => setValue('venueId', v.id)} />
               {errors.venueId && <p className="mt-1 text-xs text-brand-red">{errors.venueId.message}</p>}
             </div>
             <Select
@@ -264,7 +264,7 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
               options={[
                 { value: 'ADMIN_POSTED', label: 'Admin Posted' },
                 { value: 'COMMUNITY_SUBMITTED', label: 'Community' },
-                { value: 'VENUE_SUBMITTED', label: 'Venue' },
+                { value: 'VENUE_SUBMITTED', label: 'Place' },
                 { value: 'AUTO_SCRAPED', label: 'Auto-scraped' },
               ]}
               {...register('source')}
@@ -424,7 +424,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-// Inline venue search — debounced fetch from tRPC
+// Inline place search — debounced fetch from tRPC
 import React, { useEffect, useRef, useState as useStateR } from 'react'
 import { DRINK_DAY_TAGS_BY_SEASON } from '@/lib/drinkDays'
 
@@ -484,7 +484,7 @@ function DrinkDaySeasonGroup({
   )
 }
 
-function VenueSearch({ defaultValue, onSelect }: { defaultValue: string; onSelect: (v: { id: string; name: string }) => void }) {
+function PlaceSearch({ defaultValue, onSelect }: { defaultValue: string; onSelect: (v: { id: string; name: string }) => void }) {
   const [query, setQuery] = useStateR(defaultValue)
   const [results, setResults] = useStateR<{ id: string; name: string }[]>([])
   const [open, setOpen] = useStateR(false)
@@ -495,8 +495,8 @@ function VenueSearch({ defaultValue, onSelect }: { defaultValue: string; onSelec
     if (!query || query.length < 2) { setResults([]); return }
     clearTimeout(timer.current)
     timer.current = setTimeout(async () => {
-      const data = await utils.venues.list.fetch({ q: query, limit: 8 })
-      setResults(data.venues.map((v) => ({ id: v.id, name: v.name })))
+      const data = await utils.places.list.fetch({ q: query, limit: 8 })
+      setResults(data.places.map((v) => ({ id: v.id, name: v.name })))
       setOpen(true)
     }, 300)
   }, [query, utils])
@@ -508,7 +508,7 @@ function VenueSearch({ defaultValue, onSelect }: { defaultValue: string; onSelec
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => results.length && setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
-        placeholder="Search venues…"
+        placeholder="Search places…"
         className="form-input"
       />
       {open && results.length > 0 && (

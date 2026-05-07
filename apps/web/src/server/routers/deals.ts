@@ -51,7 +51,7 @@ export const dealsRouter = router({
         sort: z.enum(['newest', 'ending_soon', 'most_popular', 'alphabetical']).optional().default('newest'),
         page: z.number().int().min(1).optional().default(1),
         limit: z.number().int().min(1).max(48).optional().default(24),
-        venueId: z.string().optional(),
+        placeId: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -66,7 +66,7 @@ export const dealsRouter = router({
         ...(filters.neighborhood && { neighborhood: { slug: filters.neighborhood } }),
         ...(filters.day !== undefined && { activeDays: { has: filters.day } }),
         ...(filters.featured !== undefined && { featured: filters.featured }),
-        ...(filters.venueId && { venueId: filters.venueId }),
+        ...(filters.placeId && { venueId: filters.placeId }),
         ...(filters.tag && { tags: { has: filters.tag } }),
         ...(q && {
           OR: [
@@ -103,14 +103,14 @@ export const dealsRouter = router({
     }),
 
   bySlug: publicProcedure
-    .input(z.object({ venueSlug: z.string(), dealSlug: z.string() }))
+    .input(z.object({ placeSlug: z.string(), dealSlug: z.string() }))
     .query(async ({ ctx, input }) => {
       const deal = await ctx.prisma.deal.findFirst({
         where: {
           slug: input.dealSlug,
           status: DealStatus.ACTIVE,
           ...notExpired(),
-          venue: { slug: input.venueSlug },
+          venue: { slug: input.placeSlug },
         },
         include: {
           venue: true,
@@ -211,7 +211,7 @@ export const dealsRouter = router({
           slug: `${d.venue.slug}/${d.slug}`,
           category: d.category.slug,
           categoryColor: d.category.color ?? '#1A56DB',
-          venueName: d.venue.name,
+          placeName: d.venue.name,
           featured: d.featured,
         }))
     }),

@@ -16,7 +16,7 @@ interface Deal {
   endDate?: Date | null; priceNote?: string | null
   submitterName?: string | null; submitterEmail?: string | null
   createdAt: Date
-  venue: { id: string; name: string; address: string }
+  place: { id: string; name: string; address: string }
   category: { name: string; icon?: string | null }
   dealType: { name: string; icon?: string | null }
   photos: { url: string }[]
@@ -142,7 +142,7 @@ export function ModerationQueue({ deals: initialDeals }: ModerationQueueProps) {
                     <p className="text-xs text-text-secondary mt-0.5">
                       {deal.category.icon} {deal.category.name} ·{' '}
                       {deal.dealType.icon} {deal.dealType.name} ·{' '}
-                      <span className="font-medium">{deal.venue.name}</span>
+                      <span className="font-medium">{deal.place.name}</span>
                     </p>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-text-muted shrink-0">
@@ -177,7 +177,7 @@ export function ModerationQueue({ deals: initialDeals }: ModerationQueueProps) {
               {expanded === deal.id && (
                 <div className="px-4 pb-4">
                   <p className="text-sm text-text-secondary whitespace-pre-wrap">{deal.description}</p>
-                  <p className="mt-2 text-xs text-text-muted">📍 {deal.venue.address}</p>
+                  <p className="mt-2 text-xs text-text-muted">📍 {deal.place.address}</p>
                 </div>
               )}
             </div>
