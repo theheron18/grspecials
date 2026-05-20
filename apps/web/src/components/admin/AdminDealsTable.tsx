@@ -13,9 +13,15 @@ interface Deal {
   slug: string
   status: string
   createdAt: Date
+  recheckAt?: Date | null
   place: { name: string; slug: string }
   category: { name: string; icon: string | null }
   dealType: { name: string }
+}
+
+function isRecheckDue(recheckAt: Date | null | undefined): boolean {
+  if (!recheckAt) return false
+  return new Date(recheckAt).getTime() <= Date.now() + 7 * 24 * 60 * 60 * 1000
 }
 
 export function AdminDealsTable({ deals }: { deals: Deal[] }) {
@@ -111,9 +117,16 @@ export function AdminDealsTable({ deals }: { deals: Deal[] }) {
               </td>
               <td className="px-4 py-3">
                 <div>
-                  <Link href={`/admin/deals/${deal.id}`} className="font-medium text-text-primary hover:text-brand-blue block truncate max-w-[200px]">
-                    {deal.title}
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link href={`/admin/deals/${deal.id}`} className="font-medium text-text-primary hover:text-brand-blue block truncate max-w-[200px]">
+                      {deal.title}
+                    </Link>
+                    {deal.recheckAt && isRecheckDue(deal.recheckAt) && (
+                      <span className="inline-flex shrink-0 rounded-full bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700" title={`Recheck by ${new Date(deal.recheckAt).toLocaleDateString()}`}>
+                        Needs recheck
+                      </span>
+                    )}
+                  </div>
                   <span className="text-xs text-text-muted">{deal.category.icon} {deal.category.name}</span>
                 </div>
               </td>

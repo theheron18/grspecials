@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import {
   LayoutDashboard, FileText, Building2, ClipboardList,
-  Bot, Bell, Settings, LogOut, MapPin, ChevronLeft, BarChart2
+  Bot, Bell, Settings, LogOut, MapPin, ChevronLeft, BarChart2, Telescope
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
@@ -13,6 +13,7 @@ import { useState } from 'react'
 const NAV = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Deals', href: '/admin/deals', icon: FileText },
+  { label: 'Research Deals', href: '/admin/research', icon: Telescope },
   { label: 'Places', href: '/admin/places', icon: Building2 },
   { label: 'Moderation', href: '/admin/moderation', icon: ClipboardList },
   { label: 'Scraper', href: '/admin/scraper', icon: Bot },

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { router, publicProcedure, adminProcedure } from '../trpc'
-import { DealStatus, DealSource, Prisma } from '@grspecials/db'
+import { DealStatus, DealSource, SourceType, DealFrequency, Prisma } from '@grspecials/db'
 import { slugify } from '@/lib/utils'
 import { TRPCError } from '@trpc/server'
 import { getTagsForDate } from '@/lib/eventTags'
@@ -251,6 +251,7 @@ export const dealsRouter = router({
             submitterEmail: true,
             submitterName: true,
             updatedAt: true,
+            recheckAt: true,
           },
         }),
         ctx.prisma.deal.count({ where }),
@@ -285,6 +286,12 @@ export const dealsRouter = router({
         status: z.nativeEnum(DealStatus).optional().default(DealStatus.ACTIVE),
         linkUrl: z.string().url().optional(),
         linkLabel: z.string().optional(),
+        // Admin-only research fields
+        sourceUrl: z.string().optional(),
+        sourceType: z.nativeEnum(SourceType).optional(),
+        dealFrequency: z.nativeEnum(DealFrequency).optional(),
+        recheckAt: z.date().optional(),
+        aiResearched: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

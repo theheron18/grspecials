@@ -67,6 +67,29 @@ export const placesRouter = router({
     }),
 
   // Admin
+  researchList: adminProcedure
+    .query(async ({ ctx }) => {
+      const venues = await ctx.prisma.venue.findMany({
+        orderBy: { name: 'asc' },
+        select: {
+          id: true,
+          name: true,
+          address: true,
+          categoryId: true,
+          lastResearchedAt: true,
+          _count: { select: { deals: { where: { status: 'ACTIVE' } } } },
+        },
+      })
+      return venues.map((v) => ({
+        id: v.id,
+        name: v.name,
+        address: v.address,
+        categoryId: v.categoryId,
+        lastResearchedAt: v.lastResearchedAt,
+        activeDealsCount: v._count.deals,
+      }))
+    }),
+
   adminList: adminProcedure
     .input(
       z.object({
@@ -169,6 +192,7 @@ export const placesRouter = router({
         logoUrl: z.string().url().optional().nullable(),
         metaTitle: z.string().optional().nullable(),
         metaDescription: z.string().optional().nullable(),
+        lastResearchedAt: z.date().optional().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
