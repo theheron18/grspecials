@@ -59,8 +59,8 @@ export default function AdvertisePage() {
           Featured listings are available for Grand Rapids businesses. Send us a message and we'll get back to you with details and pricing.
         </p>
         <ObfuscatedEmail
-          user="theheron18"
-          domain="yahoo.com"
+          user="hello"
+          domain="grspecials.com"
           className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-blue-dark transition-colors"
         >
           <Mail className="h-4 w-4" />

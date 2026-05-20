@@ -9,7 +9,7 @@ export const env = createEnv({
     NEXTAUTH_URL: z.string().url(),
     REDIS_URL: z.string().url().optional(),
     RESEND_API_KEY: z.string().min(1).optional(),
-    EMAIL_FROM: z.string().email().optional().default('noreply@grspecials.com'),
+    EMAIL_FROM: z.string().email().optional().default('hello@grspecials.com'),
     R2_ACCOUNT_ID: z.string().optional(),
     R2_ACCESS_KEY_ID: z.string().optional(),
     R2_SECRET_ACCESS_KEY: z.string().optional(),

@@ -16,7 +16,7 @@ rl.close()
 const resend = new Resend(apiKey)
 
 const { data, error } = await resend.emails.send({
-  from: process.env.EMAIL_FROM ?? 'noreply@grspecials.com',
+  from: process.env.EMAIL_FROM ?? 'hello@grspecials.com',
   to,
   subject: 'GRspecials.com — Email test',
   html: '<h1>✅ Resend is working!</h1><p>Your email setup for GRspecials.com is configured correctly.</p>',
