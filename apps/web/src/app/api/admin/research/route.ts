@@ -122,7 +122,8 @@ export async function POST(req: NextRequest) {
 
         try {
           const response = await client.beta.messages.create({
-            model: 'claude-sonnet-4-20250514',
+            // No stable alias exists in the SDK — update this when a newer Sonnet 4.x is released.
+            model: 'claude-sonnet-4-6',
             max_tokens: 4096,
             tools: [{ type: 'web_search_20250305' as const, name: 'web_search' }],
             betas: ['web-search-2025-03-05'],
