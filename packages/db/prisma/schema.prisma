@@ -72,6 +72,17 @@ enum VenueStatus {
   PENDING_VERIFICATION
 }
 
+enum SourceType {
+  MANUAL
+  AI_RESEARCHED
+  SCRAPED
+}
+
+enum DealFrequency {
+  RECURRING
+  ONE_OFF
+}
+
 // ─── Users & Auth ─────────────────────────────────────────────────────────────
 
 model User {
@@ -196,6 +207,8 @@ model Venue {
   portalActive Boolean    @default(true)
   autoApprove Boolean     @default(false)
 
+  lastResearchedAt DateTime?
+
   categoryId  String
   category    VenueCategory @relation(fields: [categoryId], references: [id])
 
@@ -309,6 +322,13 @@ model Deal {
   linkUrl     String?
   linkLabel   String?
 
+  // Admin-only research fields — never expose on public routes
+  sourceUrl      String?
+  sourceType     SourceType    @default(MANUAL)
+  dealFrequency  DealFrequency?
+  recheckAt      DateTime?
+  aiResearched   Boolean       @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -319,6 +339,7 @@ model Deal {
   @@index([status])
   @@index([featured])
   @@index([endDate])
+  @@index([recheckAt])
   @@index([createdAt(sort: Desc)])
   @@map("deals")
 }
