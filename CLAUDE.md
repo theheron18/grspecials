@@ -53,7 +53,7 @@ URL pattern: `/deals/[venueSlug]/[dealSlug]`. Never use `deal.id` or `venue.id` 
 **6. Next.js Image for external URLs**
 Allowed domains are in `apps/web/next.config.mjs` remotePatterns. Venue logo thumbnails in `DealCard.tsx` use `unoptimized` to bypass this check (safe for small fallback images).
 
-**9. Prisma schema changes require regenerating the client in the main repo**
+**7. Prisma schema changes require regenerating the client in the main repo**
 When running in a worktree, `@grspecials/db` resolves via symlink to the main repo's `packages/db`, so TypeScript always reads the Prisma client from the main repo's `node_modules/.prisma/client`. After any schema change:
 1. Update the schema in both the worktree and the main repo's `packages/db/prisma/schema.prisma`
 2. Copy the main repo's `packages/db/.env` into the worktree's `packages/db/.env`, then run `npx prisma db push` from the worktree's `packages/db`
@@ -63,7 +63,7 @@ Type errors like "Property X does not exist on type" for Prisma models are almos
 **8. Place descriptions render as paragraphs — use blank lines to separate**
 The public place page (`apps/web/src/app/(public)/places/[slug]/page.tsx`) splits descriptions on `\n\n` and renders each chunk as a `<p>`. In the admin textarea, separate paragraphs with a blank line. Single line breaks within a paragraph are fine.
 
-**7. All dates use Eastern Time (America/Detroit) — Vercel server runs UTC**
+**9. All dates use Eastern Time (America/Detroit) — Vercel server runs UTC**
 Grand Rapids is Eastern Time. The Vercel server's `new Date()` is UTC, so naive comparisons break after 8 PM ET.
 - Get today's Eastern date: `new Date().toLocaleDateString('en-CA', { timeZone: 'America/Detroit' })` → returns `YYYY-MM-DD`
 - Store `endDate` from admin date pickers as `new Date(dateStr + 'T23:59:59')` (no timezone suffix = browser local = Eastern). This makes deals expire at 11:59 PM Eastern, not UTC midnight.
@@ -129,7 +129,7 @@ Read CLAUDE.md for project context. The critical rules in CLAUDE.md are non-nego
 - For any changes to admin functionality or database queries, describe the change and its side effects and wait for my confirmation before making it
 
 ### Before marking any task complete
-- Run `npm run type-check` and fix all errors before stopping — note: `@grspecials/types` has a pre-existing type-check failure (tsc misconfiguration in that package); run `npx tsc --noEmit` from `apps/web/` directly to check only the web app
+- Run `npm run type-check` and fix all errors before stopping
 - Run `npm run build` locally and confirm it succeeds — note: local builds fail on missing `NEXTAUTH_SECRET`/`NEXTAUTH_URL` env vars in worktree environments; this is expected and does not reflect a code error
 - If either fails, fix the errors before presenting the task as done
 - Never push code that fails a type check or build
