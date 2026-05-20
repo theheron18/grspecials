@@ -22,6 +22,13 @@ For each deal found, return structured data with these fields:
 - frequencyConfidence: "high", "medium", or "low" — how confident you are in the dealFrequency classification
 - sourceUrl: the exact URL where you found this deal (website, Facebook post, etc.). Only include deals where you found a clear source URL.
 
+Important rules — follow these strictly:
+- Only return deals where specific pricing, discount amounts, or deal details are explicitly stated on the source page. Do not estimate or summarise vague descriptions.
+- If no specific deal with explicit details is found, return an empty array rather than inferring or estimating.
+- Never infer deal details from operating hours or category tags alone.
+- Never include open mic nights, trivia nights, live music listings, or events unless they include a specific food or drink discount with a stated price or percentage.
+- The sourceUrl must be a page that explicitly mentions the deal — not just the business homepage.
+
 ${existingTitles.length > 0 ? `Existing deals already in our system for this place (skip these exact deals):\n${existingTitles.map((t) => `- ${t}`).join('\n')}` : ''}
 
 Return a JSON object with a "deals" array. Only include deals with a clear source URL. If no deals are found, return {"deals": []}.
@@ -39,26 +46,41 @@ interface ResearchDeal {
   sourceUrl: string
 }
 
-// Simple normalized title comparison for deduplication
+interface ExistingDeal {
+  title: string
+  dealTypeSlug: string
+  activeDays: number[]
+}
+
 function normalizeTitle(title: string) {
   return title.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim()
 }
 
+function daysOverlap(a: number[], b: number[]): boolean {
+  // Empty array means unknown/all days — treat as overlapping rather than missing a duplicate
+  if (a.length === 0 || b.length === 0) return true
+  return a.some((d) => b.includes(d))
+}
+
 function dedupeStatus(
-  foundTitle: string,
-  existingTitles: string[],
+  found: { title: string; dealType: string; days: number[] },
+  existing: ExistingDeal[],
 ): { status: 'new' | 'possible_duplicate' | 'exists'; matchedTitle?: string } {
-  const normalized = normalizeTitle(foundTitle)
-  for (const existing of existingTitles) {
-    const normalizedExisting = normalizeTitle(existing)
-    if (normalized === normalizedExisting) return { status: 'exists', matchedTitle: existing }
-    // Check if one contains the other or they share >70% of words
-    const wordsA = new Set(normalized.split(' '))
-    const wordsB = new Set(normalizedExisting.split(' '))
+  const normalizedFound = normalizeTitle(found.title)
+  for (const ex of existing) {
+    const normalizedEx = normalizeTitle(ex.title)
+    // Near-identical title → exists
+    if (normalizedFound === normalizedEx) return { status: 'exists', matchedTitle: ex.title }
+    // Same deal type + overlapping valid days → possible duplicate regardless of title
+    if (ex.dealTypeSlug === found.dealType && daysOverlap(found.days, ex.activeDays)) {
+      return { status: 'possible_duplicate', matchedTitle: ex.title }
+    }
+    // High title similarity fallback
+    const wordsA = new Set(normalizedFound.split(' '))
+    const wordsB = new Set(normalizedEx.split(' '))
     const intersection = [...wordsA].filter((w) => wordsB.has(w) && w.length > 2)
-    const union = new Set([...wordsA, ...wordsB])
     const similarity = intersection.length / Math.max(wordsA.size, wordsB.size)
-    if (similarity >= 0.7) return { status: 'possible_duplicate', matchedTitle: existing }
+    if (similarity >= 0.7) return { status: 'possible_duplicate', matchedTitle: ex.title }
   }
   return { status: 'new' }
 }
@@ -107,7 +129,12 @@ export async function POST(req: NextRequest) {
             state: true,
             deals: {
               where: { status: 'ACTIVE' },
-              select: { id: true, title: true },
+              select: {
+                id: true,
+                title: true,
+                activeDays: true,
+                dealType: { select: { slug: true } },
+              },
             },
           },
         })
@@ -118,11 +145,21 @@ export async function POST(req: NextRequest) {
         }
 
         const existingTitles = place.deals.map((d) => d.title)
+        const existingDeals: ExistingDeal[] = place.deals.map((d) => ({
+          title: d.title,
+          dealTypeSlug: d.dealType.slug,
+          activeDays: d.activeDays,
+        }))
         send({ type: 'place_start', placeId, placeName: place.name })
 
         try {
-          const response = await client.beta.messages.create({
-            // No stable alias exists in the SDK — update this when a newer Sonnet 4.x is released.
+          const timeoutMs = 30_000
+          const timeout = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Search timed out after 30 seconds')), timeoutMs),
+          )
+          const response = await Promise.race([
+            client.beta.messages.create({
+            // Update this string when a newer Sonnet 4.x is released
             model: 'claude-sonnet-4-6',
             max_tokens: 4096,
             tools: [{ type: 'web_search_20250305' as const, name: 'web_search' }],
@@ -137,7 +174,9 @@ export async function POST(req: NextRequest) {
                 ),
               },
             ],
-          })
+          }),
+            timeout,
+          ])
 
           // Extract text from the final response
           let resultText = ''
@@ -159,9 +198,12 @@ export async function POST(req: NextRequest) {
             // Malformed JSON — treat as no deals found
           }
 
-          // Deduplicate against existing deals
+          // Deduplicate against existing deals: title match + same dealType/overlapping days
           const deduped = deals.map((deal) => {
-            const { status, matchedTitle } = dedupeStatus(deal.title, existingTitles)
+            const { status, matchedTitle } = dedupeStatus(
+              { title: deal.title, dealType: deal.dealType, days: deal.days },
+              existingDeals,
+            )
             return { ...deal, dedupeStatus: status, matchedTitle }
           })
 

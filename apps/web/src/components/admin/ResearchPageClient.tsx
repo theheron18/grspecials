@@ -81,6 +81,15 @@ function isStale(date: Date | null): boolean {
   return diffDays >= 30
 }
 
+function researchDot(date: Date | null): { color: string; tooltip: string } {
+  if (!date) return { color: 'bg-red-400', tooltip: 'Never researched' }
+  const diffDays = (Date.now() - new Date(date).getTime()) / 86400000
+  const label = `Researched ${relativeTime(date)}`
+  if (diffDays <= 7) return { color: 'bg-emerald-400', tooltip: label }
+  if (diffDays <= 30) return { color: 'bg-amber-400', tooltip: label }
+  return { color: 'bg-red-400', tooltip: label }
+}
+
 let clientIdCounter = 0
 function nextId() { return `deal-${++clientIdCounter}` }
 
@@ -96,7 +105,7 @@ export function ResearchPageClient({
   const { data: placesData, isLoading: placesLoading } = trpc.places.researchList.useQuery()
   const places: Place[] = placesData ?? []
 
-  const [filterTab, setFilterTab] = useState<FilterTab>('no_deals')
+  const [filterTab, setFilterTab] = useState<FilterTab>('never')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [overrideSkip, setOverrideSkip] = useState<Set<string>>(new Set())
   const [results, setResults] = useState<Record<string, PlaceResult>>({})
@@ -117,6 +126,13 @@ export function ResearchPageClient({
       default: return places
     }
   }, [places, filterTab])
+
+  const filterCounts = useMemo(() => ({
+    all: places.length,
+    no_deals: places.filter((p) => p.activeDealsCount === 0).length,
+    stale: places.filter((p) => isStale(p.lastResearchedAt)).length,
+    never: places.filter((p) => !p.lastResearchedAt).length,
+  }), [places])
 
   // ── Selection helpers ──────────────────────────────────────────────────────
 
@@ -353,13 +369,18 @@ export function ResearchPageClient({
               <button
                 key={tab}
                 onClick={() => setFilterTab(tab)}
-                className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                className={`rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
                   filterTab === tab
                     ? 'bg-brand-blue text-white'
                     : 'text-text-muted hover:text-text-primary hover:bg-gray-100'
                 }`}
               >
                 {label}
+                {!placesLoading && (
+                  <span className={`ml-1 ${filterTab === tab ? 'opacity-75' : 'opacity-60'}`}>
+                    ({filterCounts[tab as FilterTab]})
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -388,50 +409,46 @@ export function ResearchPageClient({
                 const recentAndHasDeals = wasResearchedRecently(place.lastResearchedAt) && place.activeDealsCount > 0
                 const includeAnyway = overrideSkip.has(place.id)
                 const isChecked = selected.has(place.id)
+                const dot = researchDot(place.lastResearchedAt)
 
                 return (
-                  <li key={place.id} className="px-4 py-3 hover:bg-surface-bg">
-                    <label className="flex cursor-pointer items-start gap-3">
+                  <li key={place.id} className="hover:bg-surface-bg">
+                    <label className="flex cursor-pointer items-center gap-2.5 px-3 py-1.5">
                       <input
                         type="checkbox"
                         checked={isChecked}
                         onChange={() => togglePlace(place.id)}
-                        className="mt-0.5 h-4 w-4 rounded border-surface-border text-brand-blue focus:ring-brand-blue"
+                        className="h-3.5 w-3.5 shrink-0 rounded border-surface-border text-brand-blue focus:ring-brand-blue"
                       />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="truncate text-sm font-medium text-text-primary">{place.name}</span>
-                          <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-xs font-medium ${
-                            place.activeDealsCount > 0
-                              ? 'bg-emerald-50 text-emerald-700'
-                              : 'bg-gray-100 text-text-muted'
-                          }`}>
-                            {place.activeDealsCount} active
-                          </span>
-                        </div>
-                        <p className="mt-0.5 text-xs text-text-muted">
-                          {relativeTime(place.lastResearchedAt)}
-                        </p>
-                        {recentAndHasDeals && (
-                          <label className="mt-1.5 flex cursor-pointer items-start gap-1.5 rounded-md bg-amber-50 px-2 py-1.5">
-                            <input
-                              type="checkbox"
-                              checked={includeAnyway}
-                              onChange={(e) => {
-                                e.stopPropagation()
-                                setOverrideSkip((prev) => {
-                                  const next = new Set(prev)
-                                  e.target.checked ? next.add(place.id) : next.delete(place.id)
-                                  return next
-                                })
-                              }}
-                              className="mt-0.5 h-3 w-3 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
-                            />
-                            <span className="text-xs text-amber-700">Researched recently — include anyway?</span>
-                          </label>
-                        )}
-                      </div>
+                      {/* Status dot with native tooltip */}
+                      <span
+                        className={`h-2 w-2 shrink-0 rounded-full ${dot.color}`}
+                        title={dot.tooltip}
+                      />
+                      <span className="min-w-0 flex-1 truncate text-xs font-medium text-text-primary">
+                        {place.name}
+                      </span>
+                      <span className="shrink-0 text-xs text-text-muted">
+                        {place.activeDealsCount > 0 ? `${place.activeDealsCount} deals` : ''}
+                      </span>
                     </label>
+                    {recentAndHasDeals && (
+                      <label className="mx-3 mb-1 flex cursor-pointer items-center gap-1.5 rounded bg-amber-50 px-2 py-1">
+                        <input
+                          type="checkbox"
+                          checked={includeAnyway}
+                          onChange={(e) => {
+                            setOverrideSkip((prev) => {
+                              const next = new Set(prev)
+                              e.target.checked ? next.add(place.id) : next.delete(place.id)
+                              return next
+                            })
+                          }}
+                          className="h-3 w-3 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                        />
+                        <span className="text-xs text-amber-700">Researched recently — include anyway?</span>
+                      </label>
+                    )}
                   </li>
                 )
               })}
@@ -827,7 +844,9 @@ function DealCard({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-2 pt-1">
+        <div className="pt-1">
+          <p className="mb-2 text-xs text-text-muted">Verify deal details at source URL before approving</p>
+          <div className="flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={() => onChange({ dismissed: true })}
@@ -847,6 +866,7 @@ function DealCard({
           >
             {saving ? 'Adding…' : deal.dedupeStatus === 'new' ? 'Add to review' : 'Add anyway'}
           </button>
+          </div>
         </div>
       </div>
     </div>
