@@ -129,6 +129,7 @@ Read CLAUDE.md for project context. The critical rules in CLAUDE.md are non-nego
 - For any changes to admin functionality or database queries, describe the change and its side effects and wait for my confirmation before making it
 
 ### Before marking any task complete
+- After all changes are made and type-check passes, merge to main: commit the changes on the worktree branch, then `git checkout <branch> -- <files>` onto main and commit there. Never leave changes only in the worktree.
 - Run `npm run type-check` and fix all errors before stopping
 - Run `npm run build` locally and confirm it succeeds — note: local builds fail on missing `NEXTAUTH_SECRET`/`NEXTAUTH_URL` env vars in worktree environments; this is expected and does not reflect a code error
 - If either fails, fix the errors before presenting the task as done
