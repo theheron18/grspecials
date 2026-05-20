@@ -677,10 +677,10 @@ function DealCard({
   return (
     <div className={`px-5 py-4 ${deal.dedupeStatus === 'possible_duplicate' ? 'bg-amber-50/40' : ''}`}>
       {/* Dedup banner */}
-      {deal.dedupeStatus === 'possible_duplicate' && deal.matchedTitle && (
+      {deal.dedupeStatus === 'possible_duplicate' && (
         <div className="mb-3 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          <span>Similar deal already exists: <strong>{deal.matchedTitle}</strong></span>
+          <span>This place already has active deals — this may be an update to an existing deal rather than something new. Check existing deals before approving.</span>
         </div>
       )}
       {deal.dedupeStatus === 'exists' && deal.matchedTitle && (

@@ -46,45 +46,6 @@ interface ResearchDeal {
   sourceUrl: string
 }
 
-interface ExistingDeal {
-  title: string
-  dealTypeSlug: string
-  activeDays: number[]
-}
-
-function normalizeTitle(title: string) {
-  return title.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim()
-}
-
-function daysOverlap(a: number[], b: number[]): boolean {
-  // Empty array means unknown/all days — treat as overlapping rather than missing a duplicate
-  if (a.length === 0 || b.length === 0) return true
-  return a.some((d) => b.includes(d))
-}
-
-function dedupeStatus(
-  found: { title: string; dealType: string; days: number[] },
-  existing: ExistingDeal[],
-): { status: 'new' | 'possible_duplicate' | 'exists'; matchedTitle?: string } {
-  const normalizedFound = normalizeTitle(found.title)
-  for (const ex of existing) {
-    const normalizedEx = normalizeTitle(ex.title)
-    // Near-identical title → exists
-    if (normalizedFound === normalizedEx) return { status: 'exists', matchedTitle: ex.title }
-    // Same deal type + overlapping valid days → possible duplicate regardless of title
-    if (ex.dealTypeSlug === found.dealType && daysOverlap(found.days, ex.activeDays)) {
-      return { status: 'possible_duplicate', matchedTitle: ex.title }
-    }
-    // High title similarity fallback
-    const wordsA = new Set(normalizedFound.split(' '))
-    const wordsB = new Set(normalizedEx.split(' '))
-    const intersection = [...wordsA].filter((w) => wordsB.has(w) && w.length > 2)
-    const similarity = intersection.length / Math.max(wordsA.size, wordsB.size)
-    if (similarity >= 0.7) return { status: 'possible_duplicate', matchedTitle: ex.title }
-  }
-  return { status: 'new' }
-}
-
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -129,12 +90,7 @@ export async function POST(req: NextRequest) {
             state: true,
             deals: {
               where: { status: 'ACTIVE' },
-              select: {
-                id: true,
-                title: true,
-                activeDays: true,
-                dealType: { select: { slug: true } },
-              },
+              select: { id: true, title: true },
             },
           },
         })
@@ -145,17 +101,13 @@ export async function POST(req: NextRequest) {
         }
 
         const existingTitles = place.deals.map((d) => d.title)
-        const existingDeals: ExistingDeal[] = place.deals.map((d) => ({
-          title: d.title,
-          dealTypeSlug: d.dealType.slug,
-          activeDays: d.activeDays,
-        }))
+        const hasActiveDeals = place.deals.length > 0
         send({ type: 'place_start', placeId, placeName: place.name })
 
         try {
-          const timeoutMs = 30_000
+          const timeoutMs = 60_000
           const timeout = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Search timed out after 30 seconds')), timeoutMs),
+            setTimeout(() => reject(new Error('Search timed out after 60 seconds')), timeoutMs),
           )
           const response = await Promise.race([
             client.beta.messages.create({
@@ -198,14 +150,11 @@ export async function POST(req: NextRequest) {
             // Malformed JSON — treat as no deals found
           }
 
-          // Deduplicate against existing deals: title match + same dealType/overlapping days
-          const deduped = deals.map((deal) => {
-            const { status, matchedTitle } = dedupeStatus(
-              { title: deal.title, dealType: deal.dealType, days: deal.days },
-              existingDeals,
-            )
-            return { ...deal, dedupeStatus: status, matchedTitle }
-          })
+          const deduped = deals.map((deal) => ({
+            ...deal,
+            dedupeStatus: hasActiveDeals ? ('possible_duplicate' as const) : ('new' as const),
+            matchedTitle: undefined,
+          }))
 
           // Update lastResearchedAt
           await prisma.venue.update({
