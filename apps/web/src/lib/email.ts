@@ -72,7 +72,7 @@ export async function sendContactEmail(name: string, senderEmail: string, messag
   const safeMessage = message.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')
   await getResend().emails.send({
     from: env.EMAIL_FROM,
-    to: ['theheron18', 'yahoo.com'].join('@'),
+    to: 'hello@grspecials.com',
     reply_to: senderEmail,
     subject: `GRspecials contact: ${name}`,
     html: `<p><strong>From:</strong> ${name} &lt;${senderEmail}&gt;</p><hr><p>${safeMessage}</p>`,
