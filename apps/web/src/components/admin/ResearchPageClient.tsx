@@ -44,6 +44,7 @@ interface PlaceResult {
   status: 'searching' | 'done' | 'error'
   error?: string
   deals: ResearchDeal[]
+  dismissed?: boolean
 }
 
 type FilterTab = 'all' | 'no_deals' | 'stale' | 'never'
@@ -491,7 +492,7 @@ export function ResearchPageClient({
           <div className="mx-auto max-w-3xl space-y-6">
             {order.map((placeId) => {
               const result = results[placeId]
-              if (!result) return null
+              if (!result || result.dismissed) return null
               return (
                 <PlaceResultSection
                   key={placeId}
@@ -500,6 +501,7 @@ export function ResearchPageClient({
                   onUpdateDeal={(clientId, patch) => updateDeal(placeId, clientId, patch)}
                   onAddToReview={(deal) => addDealToReview(placeId, deal)}
                   onRetry={() => retryPlace(placeId)}
+                  onSkip={() => setResults((prev) => ({ ...prev, [placeId]: { ...prev[placeId]!, dismissed: true } }))}
                 />
               )
             })}
@@ -518,12 +520,14 @@ function PlaceResultSection({
   onUpdateDeal,
   onAddToReview,
   onRetry,
+  onSkip,
 }: {
   result: PlaceResult
   dealTypes: DealType[]
   onUpdateDeal: (clientId: string, patch: Partial<ResearchDeal>) => void
   onAddToReview: (deal: ResearchDeal) => Promise<void>
   onRetry: () => void
+  onSkip: () => void
 }) {
   const activeDeals = result.deals.filter((d) => !d.dismissed && !d.added)
   const dealsFound = result.deals.length
@@ -540,12 +544,20 @@ function PlaceResultSection({
       {result.status === 'error' && (
         <div className="flex items-center justify-between px-5 py-4">
           <p className="text-sm text-red-600">{result.error}</p>
-          <button
-            onClick={onRetry}
-            className="ml-4 rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
-          >
-            Retry
-          </button>
+          <div className="ml-4 flex gap-2">
+            <button
+              onClick={onSkip}
+              className="rounded-md border border-surface-border px-3 py-1.5 text-xs font-medium text-text-muted hover:bg-gray-100"
+            >
+              Skip
+            </button>
+            <button
+              onClick={onRetry}
+              className="rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
+            >
+              Retry
+            </button>
+          </div>
         </div>
       )}
 

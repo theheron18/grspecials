@@ -12,6 +12,7 @@ gr-venues_2.csv
 # Build artifacts
 apps/web/tsconfig.tsbuildinfo
 packages/types/tsconfig.tsbuildinfo
+.turbo/
 
 # Environment files
 .env.local
