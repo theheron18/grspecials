@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "PowerShell(node --version)",
+      "PowerShell(npm --version)",
+      "PowerShell(npx --version)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'fix: add MapPin to lucide imports in AdminVenueEditor *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}
