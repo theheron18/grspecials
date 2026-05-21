@@ -159,8 +159,12 @@ export async function POST(req: NextRequest) {
             // Malformed JSON — treat as no deals found
           }
 
+          const stripHtml = (text: string) => text.replace(/<[^>]*>/g, '').trim()
+
           const deduped = deals.map((deal) => ({
             ...deal,
+            title: stripHtml(deal.title),
+            description: stripHtml(deal.description),
             dedupeStatus: hasActiveDeals ? ('possible_duplicate' as const) : ('new' as const),
             matchedTitle: undefined,
           }))
