@@ -25,6 +25,18 @@ Rules:
 - Exclude open mic, trivia, live music unless tied to a stated food/drink price or percentage
 - sourceUrl must be the page that explicitly mentions the deal, not a homepage
 
+Source priority (use the highest available):
+1. The business's own official website
+2. The business's own Facebook or Instagram page where the deal is explicitly posted
+3. The business's own Google Business Profile
+4. Third-party sites (Yelp, TripAdvisor, HappyHopper, BeerOClockGR, Groupon, etc.) only as a last resort
+
+Third-party source rules:
+- Never use a third-party aggregator as the sourceUrl — always link to the business's own website or official social media page
+- If a deal is only found on a third-party site, only include it if the listing was visibly updated within the last 6 months
+- If the only available source is a third-party aggregator with no recent update date visible, do not include the deal
+- If a deal is found on the business's Facebook or Instagram, use their official social media URL as the sourceUrl
+
 ${existingTitles.length > 0 ? `Skip (already in system):\n${existingTitles.map((t) => `- ${t}`).join('\n')}` : ''}
 
 Return {"deals": []} if nothing found.
