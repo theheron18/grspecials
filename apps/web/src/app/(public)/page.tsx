@@ -9,24 +9,41 @@ import { DealCardSkeleton } from '@/components/ui/Skeleton'
 import { buildMeta } from '@/lib/seo'
 import { getTodaysHoliday } from '@/lib/holidays'
 import { getTodaysDrinkDay } from '@/lib/drinkDays'
+import {
+  isActiveNow,
+  startsWithinMinutes,
+  isActiveLaterToday,
+  getMinutesUntilStart,
+} from '@/lib/dealTime'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = buildMeta()
+
+const dealInclude = {
+  venue: {
+    select: {
+      id: true, name: true, slug: true, address: true, neighborhood: true,
+      latitude: true, longitude: true, verified: true, logoUrl: true,
+    },
+  },
+  category: { select: { id: true, name: true, slug: true, icon: true, color: true } },
+  dealType: { select: { id: true, name: true, slug: true, icon: true, color: true } },
+  photos: { take: 1, orderBy: { sortOrder: 'asc' as const } },
+} as const
 
 async function getHolidayDeals() {
   const holiday = getTodaysHoliday()
   if (!holiday) return null
 
   const deals = await prisma.deal.findMany({
-    where: { status: 'ACTIVE', tags: { has: holiday.tag }, OR: [{ endDate: null }, { endDate: { gte: new Date() } }] },
+    where: {
+      status: 'ACTIVE',
+      tags: { has: holiday.tag },
+      OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
+    },
     orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
     take: 6,
-    include: {
-      venue: { select: { id: true, name: true, slug: true, address: true, neighborhood: true, latitude: true, longitude: true, verified: true, logoUrl: true } },
-      category: { select: { id: true, name: true, slug: true, icon: true, color: true } },
-      dealType: { select: { id: true, name: true, slug: true, icon: true, color: true } },
-      photos: { take: 1, orderBy: { sortOrder: 'asc' } },
-    },
+    include: dealInclude,
   })
 
   if (deals.length === 0) return null
@@ -34,28 +51,15 @@ async function getHolidayDeals() {
 }
 
 async function getHomepageData() {
-  const [featured, recent, categories, config] = await Promise.all([
+  const [allDeals, categories, config] = await Promise.all([
     prisma.deal.findMany({
-      where: { status: 'ACTIVE', featured: true, OR: [{ endDate: null }, { endDate: { gte: new Date() } }] },
-      orderBy: { createdAt: 'desc' },
-      take: 6,
-      include: {
-        venue: { select: { id: true, name: true, slug: true, address: true, neighborhood: true, latitude: true, longitude: true, verified: true, logoUrl: true } },
-        category: { select: { id: true, name: true, slug: true, icon: true, color: true } },
-        dealType: { select: { id: true, name: true, slug: true, icon: true, color: true } },
-        photos: { take: 1, orderBy: { sortOrder: 'asc' } },
+      where: {
+        status: 'ACTIVE',
+        OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
       },
-    }),
-    prisma.deal.findMany({
-      where: { status: 'ACTIVE', OR: [{ endDate: null }, { endDate: { gte: new Date() } }] },
-      orderBy: { createdAt: 'desc' },
-      take: 8,
-      include: {
-        venue: { select: { id: true, name: true, slug: true, address: true, neighborhood: true, latitude: true, longitude: true, verified: true, logoUrl: true } },
-        category: { select: { id: true, name: true, slug: true, icon: true, color: true } },
-        dealType: { select: { id: true, name: true, slug: true, icon: true, color: true } },
-        photos: { take: 1, orderBy: { sortOrder: 'asc' } },
-      },
+      orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
+      take: 200,
+      include: dealInclude,
     }),
     prisma.venueCategory.findMany({
       where: { active: true },
@@ -65,34 +69,50 @@ async function getHomepageData() {
     prisma.siteConfig.findMany(),
   ])
 
+  const deals = allDeals.map(({ venue, ...rest }) => ({ ...rest, place: venue }))
+
+  const activeNow = deals.filter(isActiveNow).slice(0, 8)
+  const startingSoon = deals
+    .filter((d) => startsWithinMinutes(d, 120))
+    .sort((a, b) => getMinutesUntilStart(a) - getMinutesUntilStart(b))
+    .slice(0, 6)
+  const featured = deals.filter((d) => d.featured).slice(0, 6)
+  const laterToday = deals.filter(isActiveLaterToday).slice(0, 6)
+
+  // Exclude deals already in buckets 1–4 from Recently Added
+  const shownIds = new Set(
+    [...activeNow, ...startingSoon, ...featured, ...laterToday].map((d) => d.id),
+  )
+  const recent = deals.filter((d) => !shownIds.has(d.id)).slice(0, 8)
+
   const configMap = Object.fromEntries(config.map((c) => [c.key, c.value]))
-  return {
-    featured: featured.map(({ venue, ...rest }) => ({ ...rest, place: venue })),
-    recent: recent.map(({ venue, ...rest }) => ({ ...rest, place: venue })),
-    categories,
-    config: configMap,
-  }
+  return { activeNow, startingSoon, featured, laterToday, recent, categories, config: configMap }
 }
 
 export default async function HomePage() {
-  const [{ featured, recent, categories, config }, holidayData] = await Promise.all([
-    getHomepageData(),
-    getHolidayDeals(),
-  ])
+  const [
+    { activeNow, startingSoon, featured, laterToday, recent, categories, config },
+    holidayData,
+  ] = await Promise.all([getHomepageData(), getHolidayDeals()])
   const drinkDay = getTodaysDrinkDay()
 
   const headline = config['hero_headline'] ?? "Grand Rapids' Best Deals & Specials"
   const subline = config['hero_subline'] ?? 'Find happy hours, daily specials, events, and sales near you.'
 
   const holidayBannerTitle = holidayData
-    ? (config[`banner_holiday_${holidayData.holiday.tag}_title`] || `${holidayData.holiday.emoji} ${holidayData.holiday.name} Specials`)
+    ? config[`banner_holiday_${holidayData.holiday.tag}_title`] ||
+      `${holidayData.holiday.emoji} ${holidayData.holiday.name} Specials`
     : ''
   const holidayBannerSubtitle = holidayData
-    ? (config[`banner_holiday_${holidayData.holiday.tag}_subtitle`] || holidayData.holiday.drinkFocus)
+    ? config[`banner_holiday_${holidayData.holiday.tag}_subtitle`] ||
+      holidayData.holiday.drinkFocus
     : ''
   const drinkDayTagline = drinkDay
-    ? (config[`banner_drinkday_${drinkDay.tag}_tagline`] || drinkDay.tagline)
+    ? config[`banner_drinkday_${drinkDay.tag}_tagline`] || drinkDay.tagline
     : ''
+
+  const noTimedDeals =
+    activeNow.length === 0 && startingSoon.length === 0 && laterToday.length === 0
 
   return (
     <>
@@ -131,7 +151,11 @@ export default async function HomePage() {
 
           {/* Quick stats */}
           <p className="mt-4 text-xs text-blue-300">
-            {recent.length > 0 && `${featured.length} featured · ${recent.length}+ active deals`}
+            {activeNow.length > 0
+              ? `${activeNow.length} happening now · ${recent.length}+ active deals`
+              : recent.length > 0
+              ? `${recent.length}+ active deals`
+              : null}
           </p>
         </div>
       </section>
@@ -173,7 +197,8 @@ export default async function HomePage() {
                 <h2 className="text-lg font-bold text-text-primary">{holidayBannerTitle}</h2>
                 <p className="text-sm text-text-secondary mt-0.5">{holidayBannerSubtitle}</p>
                 <p className="text-xs text-text-muted mt-1">
-                  {holidayData.deals.length} deal{holidayData.deals.length !== 1 ? 's' : ''} available today
+                  {holidayData.deals.length} deal{holidayData.deals.length !== 1 ? 's' : ''}{' '}
+                  available today
                 </p>
               </div>
               <Link
@@ -197,26 +222,138 @@ export default async function HomePage() {
             <span className="text-2xl shrink-0">{drinkDay.emoji}</span>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-text-primary">
-                Today is <Link href={`/deals?tag=${drinkDay.tag}`} className="text-brand-blue hover:underline">{drinkDay.name}</Link>
+                Today is{' '}
+                <Link
+                  href={`/deals?tag=${drinkDay.tag}`}
+                  className="text-brand-blue hover:underline"
+                >
+                  {drinkDay.name}
+                </Link>
               </p>
               <p className="text-xs text-text-secondary mt-0.5 truncate">{drinkDayTagline}</p>
             </div>
           </div>
         )}
 
-        {/* Featured deals */}
+        {/* Time-based buckets or empty state */}
+        {noTimedDeals ? (
+          <div className="rounded-card border border-surface-border bg-white px-6 py-10 text-center">
+            <p className="text-base font-medium text-text-primary mb-1">
+              No deals active right now
+            </p>
+            <p className="text-sm text-text-secondary">
+              Check back tomorrow or{' '}
+              <Link href="/deals" className="text-brand-blue hover:underline">
+                browse all deals below
+              </Link>
+              .
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Bucket 1: Happening Now */}
+            {activeNow.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <h2 className="section-title">🟢 Happening Now</h2>
+                    <p className="text-sm text-text-secondary mt-0.5">
+                      Deals active at this moment
+                    </p>
+                  </div>
+                  <Link
+                    href="/deals?time=now"
+                    className="text-sm font-medium text-brand-blue hover:underline flex items-center gap-1"
+                  >
+                    See all <ChevronRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {activeNow.map((deal) => (
+                    <DealCard key={deal.id} deal={deal as never /* place already mapped */} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Bucket 2: Starting Soon */}
+            {startingSoon.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <h2 className="section-title">⏰ Starting Soon</h2>
+                    <p className="text-sm text-text-secondary mt-0.5">
+                      Deals starting in the next 2 hours
+                    </p>
+                  </div>
+                  <Link
+                    href="/deals?time=2h"
+                    className="text-sm font-medium text-brand-blue hover:underline flex items-center gap-1"
+                  >
+                    See all <ChevronRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {startingSoon.map((deal) => (
+                    <DealCard key={deal.id} deal={deal as never /* place already mapped */} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Bucket 4: Later Today */}
+            {laterToday.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <h2 className="section-title">📅 Later Today</h2>
+                    <p className="text-sm text-text-secondary mt-0.5">Coming up later today</p>
+                  </div>
+                  <Link
+                    href="/deals?time=today"
+                    className="text-sm font-medium text-brand-blue hover:underline flex items-center gap-1"
+                  >
+                    See all <ChevronRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {laterToday.map((deal) => (
+                    <DealCard key={deal.id} deal={deal as never /* place already mapped */} />
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
+        )}
+
+        {/* Bucket 3: Featured */}
         {featured.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="section-title">⭐ Featured Deals</h2>
-                <p className="text-sm text-text-secondary mt-0.5">Hand-picked specials worth knowing about</p>
+                <p className="text-sm text-text-secondary mt-0.5">
+                  Hand-picked specials worth knowing about
+                </p>
               </div>
-              <Link href="/deals?featured=true" className="text-sm font-medium text-brand-blue hover:underline flex items-center gap-1">
+              <Link
+                href="/deals?featured=true"
+                className="text-sm font-medium text-brand-blue hover:underline flex items-center gap-1"
+              >
                 View all <ChevronRight className="h-3.5 w-3.5" />
               </Link>
             </div>
-            <Suspense fallback={<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{Array(3).fill(0).map((_, i) => <DealCardSkeleton key={i} />)}</div>}>
+            <Suspense
+              fallback={
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {Array(3)
+                    .fill(0)
+                    .map((_, i) => (
+                      <DealCardSkeleton key={i} />
+                    ))}
+                </div>
+              }
+            >
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {featured.map((deal) => (
                   <DealCard key={deal.id} deal={deal as never /* place already mapped */} />
@@ -226,12 +363,39 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* Category sections */}
+        {/* Bucket 5: Recently Added — excludes deals already in buckets 1–4 */}
+        {recent.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="section-title">🆕 Recently Added</h2>
+                <p className="text-sm text-text-secondary mt-0.5">
+                  Fresh deals added in the last few days
+                </p>
+              </div>
+              <Link
+                href="/deals?sort=newest"
+                className="text-sm font-medium text-brand-blue hover:underline flex items-center gap-1"
+              >
+                See more <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {recent.map((deal) => (
+                <DealCard key={deal.id} deal={deal as never /* place already mapped */} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Bucket 6: Browse by Category */}
         <section>
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="section-title">🗺️ Browse by Category</h2>
-              <p className="text-sm text-text-secondary mt-0.5">Find exactly what you're looking for</p>
+              <p className="text-sm text-text-secondary mt-0.5">
+                Find exactly what you&apos;re looking for
+              </p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
@@ -258,29 +422,12 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Recently added */}
-        <section>
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="section-title">🆕 Recently Added</h2>
-              <p className="text-sm text-text-secondary mt-0.5">Fresh deals added in the last few days</p>
-            </div>
-            <Link href="/deals?sort=newest" className="text-sm font-medium text-brand-blue hover:underline flex items-center gap-1">
-              See more <ChevronRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {recent.map((deal) => (
-              <DealCard key={deal.id} deal={deal as never /* place already mapped */} />
-            ))}
-          </div>
-        </section>
-
         {/* CTA — Submit a deal */}
         <section className="rounded-card bg-gradient-to-r from-brand-yellow/10 to-brand-blue/10 border border-brand-yellow/20 p-8 text-center">
-          <h2 className="text-xl font-bold text-text-primary mb-2">Know a deal we're missing?</h2>
+          <h2 className="text-xl font-bold text-text-primary mb-2">Know a deal we&apos;re missing?</h2>
           <p className="text-text-secondary mb-5">
-            Help the Grand Rapids community find great specials. Submit any deal — it only takes 2 minutes.
+            Help the Grand Rapids community find great specials. Submit any deal — it only takes 2
+            minutes.
           </p>
           <Link
             href="/submit-a-deal"
