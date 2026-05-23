@@ -38,6 +38,10 @@ export function isActiveNow(deal: DealTimeable): boolean {
   if (!deal.startTime && !deal.endTime) return true
   const start = deal.startTime ? toMinutes(deal.startTime) : 0
   const end = deal.endTime ? toMinutes(deal.endTime) : 1439 // 23:59
+  if (end < start) {
+    // Deal crosses midnight (e.g. 22:00–02:00) — active in evening OR early-morning portion
+    return minutesSinceMidnight >= start || minutesSinceMidnight <= end
+  }
   return minutesSinceMidnight >= start && minutesSinceMidnight <= end
 }
 
