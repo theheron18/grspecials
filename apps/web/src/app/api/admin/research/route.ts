@@ -20,7 +20,11 @@ Each deal must include:
 - sourceUrl: exact page URL where the deal is explicitly stated
 
 Rules:
-- Only include deals with explicit pricing or discount amounts on the source page
+- Include a deal if ANY of the following are true:
+  * Specific dollar amounts or percentages are explicitly stated (e.g. $2 wells, 50% off appetizers)
+  * A named discount tier is explicitly stated (e.g. half price, buy one get one)
+  * The deal has a clear recurring schedule even if pricing is approximate
+- If hours or days are not explicitly stated on the page, still include the deal but set days to [] and add a note to the description: "Hours not listed — verify directly with the business."
 - Return [] rather than estimating or summarising vague descriptions
 - Exclude open mic, trivia, live music unless tied to a stated food/drink price or percentage
 - sourceUrl must be the page that explicitly mentions the deal, not a homepage
