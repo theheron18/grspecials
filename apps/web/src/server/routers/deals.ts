@@ -284,7 +284,7 @@ export const dealsRouter = router({
         photoUrls: z.array(z.string().url()).optional(),
         tags: z.array(z.string()).optional().default([]),
         status: z.nativeEnum(DealStatus).optional().default(DealStatus.ACTIVE),
-        linkUrl: z.string().url().optional(),
+        linkUrl: z.string().url().or(z.literal('')).optional(),
         linkLabel: z.string().optional(),
         // Admin-only research fields
         sourceUrl: z.string().optional(),
@@ -341,7 +341,7 @@ export const dealsRouter = router({
         metaTitle: z.string().optional().nullable(),
         metaDescription: z.string().optional().nullable(),
         tags: z.array(z.string()).optional(),
-        linkUrl: z.string().url().optional().nullable(),
+        linkUrl: z.string().url().or(z.literal('')).optional().nullable(),
         linkLabel: z.string().optional().nullable(),
       }),
     )
