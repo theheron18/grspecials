@@ -11,6 +11,8 @@ gr-venues_2.csv
 
 # Build artifacts
 apps/web/tsconfig.tsbuildinfo
+apps/scraper/dist/
+apps/scraper/tsconfig.tsbuildinfo
 packages/types/tsconfig.tsbuildinfo
 .turbo/
 
