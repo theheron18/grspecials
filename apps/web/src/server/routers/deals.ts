@@ -299,8 +299,8 @@ export const dealsRouter = router({
       const slug = slugify(data.title)
 
       const autoTags = [
-        ...(data.startDate ? getTagsForDate(data.startDate) : []),
-        ...(data.endDate ? getTagsForDate(data.endDate) : []),
+        ...(data.startDate ? await getTagsForDate(data.startDate) : []),
+        ...(data.endDate ? await getTagsForDate(data.endDate) : []),
       ]
       const tags = [...new Set([...data.tags, ...autoTags])]
 
@@ -350,8 +350,8 @@ export const dealsRouter = router({
 
       if (data.tags !== undefined && (data.startDate || data.endDate)) {
         const autoTags = [
-          ...(data.startDate ? getTagsForDate(data.startDate) : []),
-          ...(data.endDate ? getTagsForDate(data.endDate) : []),
+          ...(data.startDate ? await getTagsForDate(data.startDate) : []),
+          ...(data.endDate ? await getTagsForDate(data.endDate) : []),
         ]
         data.tags = [...new Set([...data.tags, ...autoTags])]
       }

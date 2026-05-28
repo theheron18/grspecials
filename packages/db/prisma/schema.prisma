@@ -476,6 +476,24 @@ model Notification {
   @@map("notifications")
 }
 
+// ─── Holidays ─────────────────────────────────────────────────────────────────
+
+model Holiday {
+  id         String   @id @default(cuid())
+  tag        String   @unique
+  label      String
+  mmdd       String
+  emoji      String   @default("")
+  drinkFocus String   @default("")
+  windowDays Int      @default(1)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([mmdd])
+  @@map("holidays")
+}
+
 // ─── Site Config ──────────────────────────────────────────────────────────────
 
 model SiteConfig {

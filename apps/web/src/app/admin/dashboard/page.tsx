@@ -27,7 +27,7 @@ export default async function AdminDashboard() {
     prisma.scraperRun.findFirst({ orderBy: { startedAt: 'desc' } }),
   ])
 
-  const upcomingEvents = getUpcomingEvents(10)
+  const upcomingEvents = await getUpcomingEvents(10)
 
   const stats = [
     { label: 'Active Deals', value: activeDeals, icon: FileText, color: '#1A56DB', href: '/admin/deals' },

@@ -1,4 +1,4 @@
-import { HOLIDAYS } from './holidays'
+import { prisma } from '@grspecials/db'
 import { DRINK_DAYS } from './drinkDays'
 
 export interface UpcomingEvent {
@@ -17,16 +17,18 @@ function dateKey(date: Date): string {
 }
 
 /** Returns all holiday/drink-day tags that apply to a given date */
-export function getTagsForDate(date: Date): string[] {
+export async function getTagsForDate(date: Date): Promise<string[]> {
   const key = dateKey(date)
   const tags: string[] = []
-  if (HOLIDAYS[key]) tags.push(HOLIDAYS[key].tag)
+  const holiday = await prisma.holiday.findFirst({ where: { mmdd: key, active: true } })
+  if (holiday) tags.push(holiday.tag)
   if (DRINK_DAYS[key]) tags.push(DRINK_DAYS[key].tag)
   return tags
 }
 
 /** Returns upcoming holiday and drink day events within the next N days */
-export function getUpcomingEvents(days: number): UpcomingEvent[] {
+export async function getUpcomingEvents(days: number): Promise<UpcomingEvent[]> {
+  const holidays = await prisma.holiday.findMany({ where: { active: true } })
   const events: UpcomingEvent[] = []
   const now = new Date()
 
@@ -34,8 +36,9 @@ export function getUpcomingEvents(days: number): UpcomingEvent[] {
     const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i)
     const key = dateKey(date)
 
-    if (HOLIDAYS[key]) {
-      events.push({ date, daysAway: i, type: 'holiday', ...HOLIDAYS[key] })
+    const holiday = holidays.find((h) => h.mmdd === key)
+    if (holiday) {
+      events.push({ date, daysAway: i, type: 'holiday', name: holiday.label, emoji: holiday.emoji, tag: holiday.tag })
     }
     if (DRINK_DAYS[key]) {
       events.push({ date, daysAway: i, type: 'drink-day', ...DRINK_DAYS[key] })

@@ -32,7 +32,7 @@ const dealInclude = {
 } as const
 
 async function getHolidayDeals() {
-  const holiday = getTodaysHoliday()
+  const holiday = await getTodaysHoliday()
   if (!holiday) return null
 
   const deals = await prisma.deal.findMany({
