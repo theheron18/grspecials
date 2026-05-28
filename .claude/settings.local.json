@@ -7,7 +7,10 @@
       "PowerShell(npx --version)",
       "Bash(git add *)",
       "Bash(git commit -m 'fix: add MapPin to lucide imports in AdminVenueEditor *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(claude plugin *)",
+      "PowerShell(claude plugin install resend@claude-plugins-official)",
+      "PowerShell(Get-ChildItem \"$env:APPDATA\\\\npm\" -ErrorAction SilentlyContinue | Where-Object { $_.Name -match \"claude\" } | Select-Object Name, FullName)"
     ]
   }
 }
