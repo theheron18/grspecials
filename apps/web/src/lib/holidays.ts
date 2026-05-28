@@ -28,6 +28,13 @@ export const HOLIDAYS: Record<string, Holiday> = {
     drinkFocus: 'Stout, Irish Whiskey, and anything dyed green.',
     windowDays: 1,
   },
+  '05-28': {
+    name: 'National Hamburger Day',
+    emoji: '🍔',
+    tag: 'national-hamburger-day',
+    drinkFocus: 'Craft beer and burger specials.',
+    windowDays: 1,
+  },
   '05-05': {
     name: 'Cinco de Mayo',
     emoji: '🎉',
@@ -129,6 +136,7 @@ export const ALL_HOLIDAY_TAGS: { label: string; tag: string }[] = [
   { label: 'Mardi Gras', tag: 'mardi-gras' },
   { label: "St. Patrick's Day", tag: 'st-patricks-day' },
   { label: 'Kentucky Derby', tag: 'kentucky-derby' },
+  { label: 'National Hamburger Day', tag: 'national-hamburger-day' },
   { label: 'Cinco de Mayo', tag: 'cinco-de-mayo' },
   { label: 'Memorial Day', tag: 'memorial-day' },
   { label: 'Fourth of July', tag: 'fourth-of-july' },
