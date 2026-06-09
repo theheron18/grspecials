@@ -1,5 +1,6 @@
 import { DealCard } from './DealCard'
 import { DealCardSkeleton } from '@/components/ui/Skeleton'
+import { isActiveNow } from '@/lib/dealTime'
 import type { DealCard as DealCardType } from '@grspecials/types'
 
 interface DealGridProps {
@@ -34,7 +35,7 @@ export function DealGrid({ deals, loading, skeletonCount = 8, emptyMessage }: De
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {deals.map((deal) => (
-        <DealCard key={deal.id} deal={deal} />
+        <DealCard key={deal.id} deal={deal} isActive={isActiveNow(deal)} />
       ))}
     </div>
   )

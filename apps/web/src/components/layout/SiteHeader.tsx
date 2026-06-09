@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState } from 'react'
-import { Menu, X, Search, MapPin } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Menu, X, Plus } from 'lucide-react'
+import { MobileSearchButton } from './MobileSearchButton'
 
 const NAV_LINKS = [
   { label: 'Browse Deals', href: '/deals' },
@@ -19,19 +20,58 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-surface-border bg-white/95 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between gap-4">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-yellow">
-              <MapPin className="h-4 w-4 text-white" strokeWidth={2.5} />
-            </div>
-            <span className="font-bold text-text-primary text-lg leading-tight">
-              GR<span className="text-brand-blue">specials</span>
-            </span>
+        {/* Mobile header — below md */}
+        <div className="flex md:hidden h-[52px] items-center justify-between">
+          {/* Logo mark */}
+          <Link href="/" aria-label="GRspecials home">
+            <Image
+              src="/logos/logo-mark-dark.svg"
+              alt="GRspecials"
+              width={32}
+              height={32}
+              unoptimized
+            />
+          </Link>
+
+          {/* Right actions */}
+          <div className="flex items-center gap-1.5">
+            <Link
+              href="/submit-a-deal"
+              className="flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-bold"
+              style={{ backgroundColor: '#F5C518', color: '#0D2145' }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Submit
+            </Link>
+
+            <MobileSearchButton variant="icon" />
+
+            <button
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-text-secondary"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop header — md and above */}
+        <div className="hidden md:flex h-16 items-center justify-between gap-4">
+          {/* Logo horizontal */}
+          <Link href="/" className="shrink-0" aria-label="GRspecials home">
+            <Image
+              src="/logos/logo-horizontal-dark.svg"
+              alt="GRspecials"
+              height={36}
+              width={0}
+              style={{ width: 'auto', height: '36px' }}
+              unoptimized
+            />
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="flex items-center gap-1">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
@@ -45,30 +85,17 @@ export function SiteHeader() {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <Link
-              href="/deals"
-              className="hidden sm:flex items-center gap-1.5 rounded-lg border border-surface-border px-3 py-1.5 text-sm text-text-secondary hover:border-brand-blue hover:text-brand-blue transition-colors"
-            >
-              <Search className="h-3.5 w-3.5" />
-              Search deals
-            </Link>
+            <MobileSearchButton variant="desktop" />
             <Link
               href="/submit-a-deal"
               className="rounded-lg bg-brand-yellow px-3.5 py-1.5 text-sm font-semibold text-text-primary hover:bg-brand-yellow-dark transition-colors"
             >
               + Add Deal
             </Link>
-            <button
-              className="md:hidden rounded-lg p-2 text-text-secondary hover:bg-gray-100"
-              onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label="Toggle menu"
-            >
-              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile menu drawer */}
         {mobileOpen && (
           <div className="md:hidden border-t border-surface-border py-3 pb-4 animate-fade-in">
             <nav className="flex flex-col gap-1">

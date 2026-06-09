@@ -1,10 +1,11 @@
 'use client'
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { useCallback } from 'react'
-import { X } from 'lucide-react'
+import { useCallback, useState } from 'react'
+import { X, SlidersHorizontal, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DAY_NAMES_FULL } from '@/lib/utils'
+import { BottomSheet } from '@/components/ui/BottomSheet'
 import type { TimeFilter } from '@/lib/dealTime'
 
 interface Category { slug: string; name: string; icon?: string | null }
@@ -16,6 +17,7 @@ interface DealFiltersProps {
   dealTypes: DealType[]
   neighborhoods: Neighborhood[]
   effectiveTime: TimeFilter
+  total?: number
 }
 
 const TIME_OPTIONS: { value: TimeFilter; label: string }[] = [
@@ -25,15 +27,29 @@ const TIME_OPTIONS: { value: TimeFilter; label: string }[] = [
   { value: 'all', label: '🏷️ All Deals' },
 ]
 
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Newest' },
+  { value: 'ending_soon', label: 'Ending Soon' },
+  { value: 'most_popular', label: 'Most Popular' },
+  { value: 'alphabetical', label: 'A–Z' },
+]
+
 export function DealFilters({
   categories,
   dealTypes,
   neighborhoods,
   effectiveTime,
+  total,
 }: DealFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const [filterOpen, setFilterOpen] = useState(false)
+
+  // Local state for bottom sheet selections (applied on tap)
+  const [sheetCategory, setSheetCategory] = useState('')
+  const [sheetDealType, setSheetDealType] = useState('')
+  const [sheetNeighborhood, setSheetNeighborhood] = useState('')
 
   const updateParam = useCallback(
     (key: string, value: string | null) => {
@@ -65,27 +81,47 @@ export function DealFilters({
     neighborhood: searchParams.get('neighborhood') ?? '',
     day: searchParams.get('day') ?? '',
     sort: searchParams.get('sort') ?? 'newest',
-    // Use URL param if explicit, else fall back to server-computed effective time
     time: (searchParams.get('time') as TimeFilter | null) ?? effectiveTime,
   }
 
-  const activeCount = [current.category, current.dealType, current.neighborhood].filter(
-    Boolean,
-  ).length
-
-  // Hide day filter when a time filter is active — it's implied to be today
+  const activeCount = [current.category, current.dealType, current.neighborhood].filter(Boolean).length
   const showDayFilter = current.time === 'all'
+
+  const currentSortLabel = SORT_OPTIONS.find((o) => o.value === current.sort)?.label ?? 'Newest'
+
+  function cycleSortOption() {
+    const idx = SORT_OPTIONS.findIndex((o) => o.value === current.sort)
+    const next = SORT_OPTIONS[(idx + 1) % SORT_OPTIONS.length]
+    updateParam('sort', next.value)
+  }
+
+  function openFilterSheet() {
+    setSheetCategory(current.category)
+    setSheetDealType(current.dealType)
+    setSheetNeighborhood(current.neighborhood)
+    setFilterOpen(true)
+  }
+
+  function applySheetFilters() {
+    const params = new URLSearchParams(searchParams.toString())
+    if (sheetCategory) params.set('category', sheetCategory); else params.delete('category')
+    if (sheetDealType) params.set('dealType', sheetDealType); else params.delete('dealType')
+    if (sheetNeighborhood) params.set('neighborhood', sheetNeighborhood); else params.delete('neighborhood')
+    params.delete('page')
+    router.push(`${pathname}?${params.toString()}`, { scroll: false })
+    setFilterOpen(false)
+  }
 
   return (
     <div className="space-y-4">
-      {/* Time filter pills */}
+      {/* Time filter pills — same on mobile and desktop */}
       <div className="flex gap-2 flex-wrap">
         {TIME_OPTIONS.map(({ value, label }) => (
           <button
             key={value}
             onClick={() => updateTime(value)}
             className={cn(
-              'rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors whitespace-nowrap',
+              'touch-pill rounded-full border text-sm font-medium transition-colors whitespace-nowrap',
               'focus:outline-none focus:ring-2 focus:ring-brand-blue/20',
               current.time === value
                 ? 'border-brand-blue bg-brand-blue text-white'
@@ -97,8 +133,29 @@ export function DealFilters({
         ))}
       </div>
 
-      {/* Sort + clear */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      {/* Mobile filter controls */}
+      <div className="flex md:hidden items-center gap-2">
+        <button
+          onClick={openFilterSheet}
+          className="flex items-center gap-1.5 h-10 px-3 rounded-lg bg-brand-blue text-white text-sm"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Filters{activeCount > 0 ? ` (${activeCount})` : ''}
+        </button>
+        <button
+          onClick={cycleSortOption}
+          className="flex items-center gap-1 h-10 px-3 rounded-lg bg-white border border-surface-border text-sm text-text-secondary"
+        >
+          {currentSortLabel}
+          <ChevronDown className="h-3.5 w-3.5" />
+        </button>
+        {total !== undefined && (
+          <span className="ml-auto text-xs text-text-muted">{total} deals</span>
+        )}
+      </div>
+
+      {/* Desktop sort + clear */}
+      <div className="hidden md:flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium text-text-secondary">Sort:</label>
           <select
@@ -106,10 +163,9 @@ export function DealFilters({
             onChange={(e) => updateParam('sort', e.target.value)}
             className="rounded-lg border border-surface-border bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
           >
-            <option value="newest">Newest</option>
-            <option value="ending_soon">Ending Soon</option>
-            <option value="most_popular">Most Popular</option>
-            <option value="alphabetical">A–Z</option>
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
           </select>
         </div>
         {activeCount > 0 && (
@@ -127,30 +183,26 @@ export function DealFilters({
         )}
       </div>
 
-      {/* Filter pills row */}
-      <div className="flex gap-3 flex-wrap">
-        {/* Category */}
+      {/* Desktop filter pills row */}
+      <div className="hidden md:flex gap-3 flex-wrap">
         <FilterGroup
           label="Category"
           options={categories.map((c) => ({ value: c.slug, label: `${c.icon ?? ''} ${c.name}` }))}
           value={current.category}
           onChange={(v) => updateParam('category', v)}
         />
-        {/* Deal type */}
         <FilterGroup
           label="Deal Type"
           options={dealTypes.map((d) => ({ value: d.slug, label: `${d.icon ?? ''} ${d.name}` }))}
           value={current.dealType}
           onChange={(v) => updateParam('dealType', v)}
         />
-        {/* Neighborhood */}
         <FilterGroup
           label="Neighborhood"
           options={neighborhoods.map((n) => ({ value: n.slug, label: n.name }))}
           value={current.neighborhood}
           onChange={(v) => updateParam('neighborhood', v)}
         />
-        {/* Day — only shown when time filter is 'all' */}
         {showDayFilter && (
           <FilterGroup
             label="Day"
@@ -160,6 +212,36 @@ export function DealFilters({
           />
         )}
       </div>
+
+      {/* Mobile filter bottom sheet */}
+      <BottomSheet isOpen={filterOpen} onClose={() => setFilterOpen(false)} title="Filter Deals">
+        <div className="space-y-6 pb-4">
+          <PillGroup
+            label="Category"
+            options={[{ value: '', label: 'All' }, ...categories.map((c) => ({ value: c.slug, label: `${c.icon ?? ''} ${c.name}` }))]}
+            value={sheetCategory}
+            onChange={setSheetCategory}
+          />
+          <PillGroup
+            label="Deal Type"
+            options={[{ value: '', label: 'All' }, ...dealTypes.map((d) => ({ value: d.slug, label: `${d.icon ?? ''} ${d.name}` }))]}
+            value={sheetDealType}
+            onChange={setSheetDealType}
+          />
+          <PillGroup
+            label="Neighborhood"
+            options={[{ value: '', label: 'All' }, ...neighborhoods.map((n) => ({ value: n.slug, label: n.name }))]}
+            value={sheetNeighborhood}
+            onChange={setSheetNeighborhood}
+          />
+        </div>
+        <button
+          onClick={applySheetFilters}
+          className="w-full rounded-xl bg-brand-red text-white h-12 font-semibold text-sm mt-2"
+        >
+          {total !== undefined ? `Show ${total} deals` : 'Apply Filters'}
+        </button>
+      </BottomSheet>
     </div>
   )
 }
@@ -194,5 +276,39 @@ function FilterGroup({
         </option>
       ))}
     </select>
+  )
+}
+
+function PillGroup({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string
+  options: { value: string; label: string }[]
+  value: string
+  onChange: (v: string) => void
+}) {
+  return (
+    <div>
+      <p className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">{label}</p>
+      <div className="flex flex-wrap gap-2">
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => onChange(opt.value === value ? '' : opt.value)}
+            className={cn(
+              'touch-pill rounded-full border text-sm font-medium transition-colors',
+              opt.value === value
+                ? 'border-brand-blue bg-brand-blue text-white'
+                : 'border-surface-border bg-white text-text-secondary',
+            )}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }

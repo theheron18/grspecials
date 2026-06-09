@@ -83,6 +83,14 @@
   .admin-nav-item.active {
     @apply bg-brand-blue/10 text-brand-blue;
   }
+
+  .touch-pill {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
 }
 
 @layer utilities {

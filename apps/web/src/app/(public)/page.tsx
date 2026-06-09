@@ -2,7 +2,8 @@ export const dynamic = 'force-dynamic'
 
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { Search, MapPin, ChevronRight } from 'lucide-react'
+import Image from 'next/image'
+import { Search, ChevronRight } from 'lucide-react'
 import { prisma } from '@grspecials/db'
 import { DealCard } from '@/components/deals/DealCard'
 import { DealCardSkeleton } from '@/components/ui/Skeleton'
@@ -118,15 +119,24 @@ export default async function HomePage() {
     <>
       {/* Hero */}
       <section className="bg-gradient-to-b from-brand-blue to-brand-blue-dark text-white">
-        <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <MapPin className="h-5 w-5 text-brand-yellow" />
-            <span className="text-sm font-medium text-blue-200">Grand Rapids, MI</span>
+        <div className="mx-auto max-w-4xl px-4 py-3 sm:px-6 sm:py-24 text-center">
+          {/* Mobile logo above headline */}
+          <div className="md:hidden mb-3">
+            <Image
+              src="/logos/logo-horizontal-light.svg"
+              alt="GRspecials"
+              width={180}
+              height={40}
+              className="mx-auto"
+              unoptimized
+              style={{ maxWidth: '180px' }}
+            />
           </div>
+
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl text-balance mb-4">
             {headline}
           </h1>
-          <p className="text-lg text-blue-100 mb-8 text-balance">{subline}</p>
+          <p className="hidden sm:block text-lg text-blue-100 mb-8 text-balance">{subline}</p>
 
           {/* Search bar */}
           <div className="flex gap-2 max-w-xl mx-auto">
@@ -137,33 +147,59 @@ export default async function HomePage() {
                   name="q"
                   type="search"
                   placeholder="Search deals, venues, or specials…"
-                  className="w-full rounded-xl border-0 pl-10 pr-4 py-3.5 text-text-primary shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-yellow text-sm"
+                  className="w-full rounded-xl border-0 pl-10 pr-4 h-11 sm:py-3.5 text-text-primary shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-yellow text-sm"
                 />
               </form>
             </div>
             <Link
               href="/deals"
-              className="rounded-xl bg-brand-yellow px-5 py-3.5 text-sm font-semibold text-text-primary hover:bg-brand-yellow-dark transition-colors shadow-lg whitespace-nowrap"
+              className="rounded-xl bg-brand-yellow px-5 h-11 sm:py-3.5 text-sm font-semibold text-text-primary hover:bg-brand-yellow-dark transition-colors shadow-lg whitespace-nowrap flex items-center"
             >
               Browse All
             </Link>
           </div>
-
-          {/* Quick stats */}
-          <p className="mt-4 text-xs text-blue-300">
-            {activeNow.length > 0
-              ? `${activeNow.length} happening now · ${recent.length}+ active deals`
-              : recent.length > 0
-              ? `${recent.length}+ active deals`
-              : null}
-          </p>
         </div>
       </section>
 
       {/* Category quick-links */}
       <section className="bg-white border-b border-surface-border">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+          {/* Mobile: time-based filter pills */}
+          <div className="flex md:hidden gap-2 overflow-x-auto scrollbar-hide pb-1">
+            <Link
+              href="/deals"
+              className="touch-pill rounded-full border border-brand-blue bg-brand-blue text-white whitespace-nowrap text-sm font-medium shrink-0"
+            >
+              All
+            </Link>
+            <Link
+              href="/deals?time=now"
+              className="touch-pill rounded-full border border-surface-border bg-white text-text-secondary whitespace-nowrap text-sm font-medium shrink-0 gap-1.5"
+            >
+              <span className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+              Right now
+              {activeNow.length > 0 && (
+                <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-[10px] font-bold text-white shrink-0">
+                  {activeNow.length}
+                </span>
+              )}
+            </Link>
+            <Link
+              href="/deals?time=today"
+              className="touch-pill rounded-full border border-surface-border bg-white text-text-secondary whitespace-nowrap text-sm font-medium shrink-0"
+            >
+              Today
+            </Link>
+            <Link
+              href="/deals"
+              className="touch-pill rounded-full border border-surface-border bg-white text-text-secondary whitespace-nowrap text-sm font-medium shrink-0"
+            >
+              This week
+            </Link>
+          </div>
+
+          {/* Desktop: category pills */}
+          <div className="hidden md:flex gap-2 overflow-x-auto scrollbar-hide pb-1">
             <Link
               href="/deals"
               className="flex items-center gap-1.5 rounded-full border border-surface-border bg-white px-3.5 py-2 text-sm font-medium text-text-secondary hover:border-brand-blue hover:text-brand-blue whitespace-nowrap transition-colors shrink-0"
@@ -178,7 +214,7 @@ export default async function HomePage() {
               >
                 {cat.icon} {cat.name}
                 {cat._count.deals > 0 && (
-                  <span className="ml-0.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-text-muted">
+                  <span className="ml-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-text-muted">
                     {cat._count.deals}
                   </span>
                 )}
@@ -270,7 +306,7 @@ export default async function HomePage() {
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {activeNow.map((deal) => (
-                    <DealCard key={deal.id} deal={deal as never /* place already mapped */} />
+                    <DealCard key={deal.id} deal={deal as never /* place already mapped */} isActive />
                   ))}
                 </div>
               </section>

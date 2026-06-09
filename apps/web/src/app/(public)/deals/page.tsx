@@ -225,6 +225,7 @@ export default async function DealsPage({ searchParams }: PageProps) {
           dealTypes={taxonomy.dealTypes}
           neighborhoods={taxonomy.neighborhoods}
           effectiveTime={effectiveTime}
+          total={total}
         />
       </Suspense>
 
