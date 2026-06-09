@@ -125,8 +125,8 @@ export default async function HomePage() {
             <Image
               src="/logos/logo-horizontal-light.svg"
               alt="GRspecials"
-              width={307.328}
-              height={83.013}
+              width={310}
+              height={85}
               className="mx-auto"
               unoptimized
             />
