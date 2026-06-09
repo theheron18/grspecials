@@ -65,7 +65,7 @@ export function SiteHeader() {
               alt="GRspecials"
               height={36}
               width={0}
-              style={{ width: 'auto', height: '36px' }}
+              style={{ width: 'auto', height: '40px' }}
               unoptimized
             />
           </Link>
