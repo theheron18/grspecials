@@ -119,7 +119,7 @@ export default async function HomePage() {
     <>
       {/* Hero */}
       <section className="bg-gradient-to-b from-brand-blue to-brand-blue-dark text-white">
-        <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-24 text-center">
+        <div className="mx-auto max-w-4xl px-4 pt-3 pb-3 sm:px-6 sm:py-24 text-center">
           {/* Mobile: logo only, no headline */}
           <div className="md:hidden flex items-center justify-center">
             <Image
@@ -137,8 +137,8 @@ export default async function HomePage() {
           </h1>
           <p className="hidden sm:block text-lg text-blue-100 mb-8 text-balance">{subline}</p>
 
-          {/* Search bar — desktop only */}
-          <div className="hidden md:flex gap-2 max-w-xl mx-auto">
+          {/* Search bar */}
+          <div className="flex gap-2 max-w-xl mx-auto mt-3 md:mt-0">
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <form action="/deals" method="get">
