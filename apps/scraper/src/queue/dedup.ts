@@ -38,8 +38,8 @@ export async function isDuplicate(deal: ParsedDeal): Promise<boolean> {
 
   for (const existing of recent) {
     const titleSim = similarity(deal.title, existing.title)
-    const venueSim = deal.venueName
-      ? similarity(deal.venueName, existing.venue.name)
+    const venueSim = deal.placeName
+      ? similarity(deal.placeName, existing.venue.name)
       : 0.5
 
     if (titleSim > 0.7 && venueSim > 0.5) {

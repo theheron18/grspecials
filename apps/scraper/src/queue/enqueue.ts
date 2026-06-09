@@ -19,22 +19,22 @@ export async function enqueueDeal(deal: ParsedDeal, sourceId: string): Promise<b
   }
 
   // Find or create a stub venue
-  let venue = deal.venueName
+  let venue = deal.placeName
     ? await prisma.venue.findFirst({
-        where: { name: { contains: deal.venueName, mode: 'insensitive' } },
+        where: { name: { contains: deal.placeName, mode: 'insensitive' } },
         select: { id: true, categoryId: true },
       })
     : null
 
-  if (!venue && deal.venueName) {
+  if (!venue && deal.placeName) {
     const defaultCategory = await prisma.venueCategory.findFirst({
       where: { slug: 'other' },
       select: { id: true },
     })
     venue = await prisma.venue.create({
       data: {
-        name: deal.venueName,
-        slug: `${slugify(deal.venueName)}-${Date.now()}`,
+        name: deal.placeName,
+        slug: `${slugify(deal.placeName)}-${Date.now()}`,
         address: 'Grand Rapids, MI',
         categoryId: defaultCategory!.id,
         status: 'PENDING_VERIFICATION',
