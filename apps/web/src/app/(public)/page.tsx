@@ -118,18 +118,17 @@ export default async function HomePage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-gradient-to-b from-brand-blue to-brand-blue-dark text-white">
-        <div className="mx-auto max-w-4xl px-4 py-3 sm:px-6 sm:py-24 text-center">
+      <section className="bg-gradient-to-b from-brand-blue to-brand-blue-dark text-white max-h-[160px] sm:max-h-none overflow-hidden">
+        <div className="mx-auto max-w-4xl px-4 py-2 sm:px-6 sm:py-24 text-center">
           {/* Mobile logo above headline */}
-          <div className="md:hidden mb-3">
+          <div className="md:hidden">
             <Image
               src="/logos/logo-horizontal-light.svg"
               alt="GRspecials"
-              width={180}
-              height={40}
-              className="mx-auto"
+              width={160}
+              height={48}
+              className="mx-auto mb-2"
               unoptimized
-              style={{ maxWidth: '180px' }}
             />
           </div>
 
@@ -271,8 +270,8 @@ export default async function HomePage() {
           </div>
         )}
 
-        {/* Time-based buckets or empty state */}
-        {noTimedDeals ? (
+        {/* Time-based buckets or empty state — only show empty state when there are also no featured/recent deals */}
+        {noTimedDeals && featured.length === 0 && recent.length === 0 ? (
           <div className="rounded-card border border-surface-border bg-white px-6 py-10 text-center">
             <p className="text-base font-medium text-text-primary mb-1">
               No deals active right now
@@ -285,7 +284,7 @@ export default async function HomePage() {
               .
             </p>
           </div>
-        ) : (
+        ) : !noTimedDeals ? (
           <>
             {/* Bucket 1: Happening Now */}
             {activeNow.length > 0 && (
@@ -360,7 +359,7 @@ export default async function HomePage() {
               </section>
             )}
           </>
-        )}
+        ) : null}
 
         {/* Bucket 3: Featured */}
         {featured.length > 0 && (

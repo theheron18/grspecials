@@ -112,7 +112,7 @@ export function DealCard({ deal, className, showSource = true, isActive }: DealC
             <div className="h-[7px] w-[7px] rounded-full bg-green-500" />
           )}
           {priceLabel && (
-            <div className="bg-brand-blue text-brand-yellow rounded-lg px-2 py-1 text-[11px] font-bold max-w-[80px] text-center leading-tight">
+            <div className="bg-brand-blue text-brand-yellow rounded-lg px-2 py-1 text-[11px] font-bold max-w-[88px] text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
               {priceLabel}
             </div>
           )}
