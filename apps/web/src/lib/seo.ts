@@ -8,7 +8,7 @@ export function buildMeta(overrides: Partial<Metadata> = {}): Metadata {
   const defaults: Metadata = {
     metadataBase: new URL(BASE_URL),
     title: {
-      default: "GRspecials.com — Grand Rapids Deals & Specials",
+      default: "Grand Rapids Deals & Specials | GRspecials.com",
       template: `%s | ${SITE_NAME}`,
     },
     description:
@@ -17,7 +17,7 @@ export function buildMeta(overrides: Partial<Metadata> = {}): Metadata {
       type: 'website',
       siteName: SITE_NAME,
       locale: 'en_US',
-      images: [{ url: '/images/og-default.jpg', width: 1200, height: 630, alt: SITE_NAME }],
+      images: [{ url: '/images/og-default.jpg', width: 1200, height: 630, alt: 'GRspecials.com — Grand Rapids local deals, happy hours and specials' }],
     },
     twitter: {
       card: 'summary_large_image',

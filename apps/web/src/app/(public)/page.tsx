@@ -212,9 +212,9 @@ export default async function HomePage() {
                 href={`/deals?category=${cat.slug}`}
                 className="flex items-center gap-1.5 rounded-full border border-surface-border bg-white px-3.5 py-2 text-sm font-medium text-text-secondary hover:border-brand-blue hover:text-brand-blue whitespace-nowrap transition-colors shrink-0"
               >
-                {cat.icon} {cat.name}
+                {cat.icon} <span>{cat.name}</span>
                 {cat._count.deals > 0 && (
-                  <span className="ml-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-text-muted">
+                  <span className="ml-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-text-muted">
                     {cat._count.deals}
                   </span>
                 )}
