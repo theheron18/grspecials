@@ -1,20 +1,21 @@
 import Link from 'next/link'
-import { MapPin } from 'lucide-react'
+import Image from 'next/image'
 
 export function SiteFooter() {
   return (
-    <footer className="mt-16 border-t border-surface-border bg-white">
+    <footer className="mt-4 md:mt-16 border-t border-surface-border bg-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="flex items-center gap-2 mb-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-yellow">
-                <MapPin className="h-4 w-4 text-white" strokeWidth={2.5} />
-              </div>
-              <span className="font-bold text-text-primary text-lg">
-                GR<span className="text-brand-blue">specials</span>
-              </span>
+            <Link href="/" className="inline-flex mb-3">
+              <Image
+                src="/logos/logo-horizontal-dark.svg"
+                alt="GRspecials"
+                width={160}
+                height={44}
+                unoptimized
+              />
             </Link>
             <p className="text-sm text-text-secondary leading-relaxed">
               Grand Rapids' home for deals, specials & events. Updated daily.

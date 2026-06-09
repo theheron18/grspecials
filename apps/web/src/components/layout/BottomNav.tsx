@@ -87,7 +87,7 @@ export function BottomNav() {
           className="flex flex-1 flex-col items-center justify-center min-h-[44px] h-[62px]"
           aria-label="GRspecials home"
         >
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-brand-blue p-1">
+          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-brand-blue p-0.5">
             <Image
               src="/logos/logo-mark-light.svg"
               alt="GRspecials"
