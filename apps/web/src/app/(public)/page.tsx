@@ -118,27 +118,27 @@ export default async function HomePage() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-gradient-to-b from-brand-blue to-brand-blue-dark text-white max-h-[160px] sm:max-h-none overflow-hidden">
-        <div className="mx-auto max-w-4xl px-4 py-2 sm:px-6 sm:py-24 text-center">
-          {/* Mobile logo above headline */}
-          <div className="md:hidden">
+      <section className="bg-gradient-to-b from-brand-blue to-brand-blue-dark text-white">
+        <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-24 text-center">
+          {/* Mobile: logo only, no headline */}
+          <div className="md:hidden flex items-center justify-center">
             <Image
               src="/logos/logo-horizontal-light.svg"
               alt="GRspecials"
-              width={160}
-              height={48}
-              className="mx-auto mb-2"
+              width={307.328}
+              height={83.013}
+              className="mx-auto"
               unoptimized
             />
           </div>
 
-          <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl text-balance mb-4">
+          <h1 className="hidden md:block text-3xl font-extrabold tracking-tight sm:text-5xl text-balance mb-4">
             {headline}
           </h1>
           <p className="hidden sm:block text-lg text-blue-100 mb-8 text-balance">{subline}</p>
 
-          {/* Search bar */}
-          <div className="flex gap-2 max-w-xl mx-auto">
+          {/* Search bar — desktop only */}
+          <div className="hidden md:flex gap-2 max-w-xl mx-auto">
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <form action="/deals" method="get">
