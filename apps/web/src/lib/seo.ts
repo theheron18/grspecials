@@ -8,7 +8,7 @@ export function buildMeta(overrides: Partial<Metadata> = {}): Metadata {
   const defaults: Metadata = {
     metadataBase: new URL(BASE_URL),
     title: {
-      default: "Grand Rapids Deals & Specials | GRspecials.com",
+      default: "Grand Rapids Deals & Specials",
       template: `%s | ${SITE_NAME}`,
     },
     description:
