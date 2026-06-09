@@ -154,7 +154,8 @@ export default async function HomePage() {
               href="/deals"
               className="rounded-xl bg-brand-yellow px-5 h-11 sm:py-3.5 text-sm font-semibold text-text-primary hover:bg-brand-yellow-dark transition-colors shadow-lg whitespace-nowrap flex items-center"
             >
-              Browse All
+              <span className="md:hidden">Search</span>
+              <span className="hidden md:inline">Browse All</span>
             </Link>
           </div>
         </div>
@@ -223,7 +224,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-12">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:py-10 sm:px-6 lg:px-8 space-y-6 sm:space-y-12">
         {/* Holiday banner */}
         {holidayData && (
           <section className="rounded-card border-2 border-brand-yellow/40 bg-gradient-to-r from-brand-yellow/10 to-orange-50 overflow-hidden">
@@ -434,7 +435,7 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
-            {categories.map((cat) => (
+            {categories.filter((cat) => cat._count.deals > 0).map((cat) => (
               <Link
                 key={cat.slug}
                 href={`/deals?category=${cat.slug}`}

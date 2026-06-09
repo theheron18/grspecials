@@ -23,7 +23,7 @@ export function SiteHeader() {
         {/* Mobile header — below md */}
         <div className="flex md:hidden h-[52px] items-center justify-between">
           {/* Logo mark */}
-          <Link href="/" aria-label="GRspecials home">
+          <Link href="/" aria-label="GRspecials home" className="flex shrink-0 w-8 h-8">
             <Image
               src="/logos/logo-mark-dark.svg"
               alt="GRspecials"
