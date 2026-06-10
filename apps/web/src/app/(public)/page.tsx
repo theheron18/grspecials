@@ -119,7 +119,7 @@ export default async function HomePage() {
     <>
       {/* Hero */}
       <section className="bg-gradient-to-b from-brand-blue to-brand-blue-dark text-white">
-        <div className="mx-auto max-w-4xl px-4 pt-3 pb-3 sm:px-6 md:py-4 text-center">
+        <div className="mx-auto max-w-4xl px-4 pt-1.5 pb-1.5 sm:px-6 md:py-2 text-center">
           {/* Logo: shown on both mobile and desktop */}
           <div className="flex items-center justify-center mb-6">
             <Image
