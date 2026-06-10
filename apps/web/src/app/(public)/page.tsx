@@ -121,7 +121,7 @@ export default async function HomePage() {
       <section className="bg-gradient-to-b from-brand-blue to-brand-blue-dark text-white">
         <div className="mx-auto max-w-4xl px-4 pt-1.5 pb-1.5 sm:px-6 md:py-2 text-center">
           {/* Logo: shown on both mobile and desktop */}
-          <div className="flex items-center justify-center mb-6">
+          <div className="flex items-center justify-center mb-3">
             <Image
               src="/logos/logo-horizontal-light.svg"
               alt="GRspecials"
@@ -139,7 +139,7 @@ export default async function HomePage() {
           <p className="hidden md:block text-lg text-blue-100 mb-4 text-balance">{subline}</p>
 
           {/* Search bar */}
-          <div className="flex gap-2 max-w-xl mx-auto mt-3 md:mt-0">
+          <div className="flex gap-2 max-w-xl mx-auto mt-1 md:mt-0">
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <form action="/deals" method="get">
