@@ -119,7 +119,7 @@ export default async function HomePage() {
     <>
       {/* Hero */}
       <section className="bg-gradient-to-b from-brand-blue to-brand-blue-dark text-white">
-        <div className="mx-auto max-w-4xl px-4 pt-3 pb-3 sm:px-6 md:py-6 text-center">
+        <div className="mx-auto max-w-4xl px-4 pt-3 pb-3 sm:px-6 md:py-4 text-center">
           {/* Logo: shown on both mobile and desktop */}
           <div className="flex items-center justify-center mb-6">
             <Image
@@ -133,10 +133,10 @@ export default async function HomePage() {
           </div>
 
           {/* h1 kept in DOM for SEO, hidden visually on desktop */}
-          <h1 className="md:sr-only text-3xl font-extrabold tracking-tight sm:text-5xl text-balance mb-4">
+          <h1 className="sr-only">
             {headline}
           </h1>
-          <p className="text-base md:text-lg text-blue-100 mb-8 text-balance">{subline}</p>
+          <p className="hidden md:block text-lg text-blue-100 mb-8 text-balance">{subline}</p>
 
           {/* Search bar */}
           <div className="flex gap-2 max-w-xl mx-auto mt-3 md:mt-0">
