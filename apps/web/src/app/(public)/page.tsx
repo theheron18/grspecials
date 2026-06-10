@@ -136,7 +136,7 @@ export default async function HomePage() {
           <h1 className="sr-only">
             {headline}
           </h1>
-          <p className="hidden md:block text-lg text-blue-100 mb-8 text-balance">{subline}</p>
+          <p className="hidden md:block text-lg text-blue-100 mb-4 text-balance">{subline}</p>
 
           {/* Search bar */}
           <div className="flex gap-2 max-w-xl mx-auto mt-3 md:mt-0">
