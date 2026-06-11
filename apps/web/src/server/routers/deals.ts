@@ -343,6 +343,8 @@ export const dealsRouter = router({
         tags: z.array(z.string()).optional(),
         linkUrl: z.string().url().or(z.literal('')).optional().nullable(),
         linkLabel: z.string().optional().nullable(),
+        sourceUrl: z.string().optional().nullable(),
+        recheckAt: z.date().optional().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

@@ -34,6 +34,8 @@ const schema = z.object({
   metaDescription: z.string().optional(),
   linkUrl: z.string().optional(),
   linkLabel: z.string().optional(),
+  sourceUrl: z.string().optional(),
+  recheckAt: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -50,6 +52,7 @@ interface Deal {
   startDate?: Date | null; endDate?: Date | null; priceNote?: string | null
   adminNotes?: string | null; metaTitle?: string | null; metaDescription?: string | null
   linkUrl?: string | null; linkLabel?: string | null
+  sourceUrl?: string | null; recheckAt?: Date | null
   tags?: string[]
   place: Place; photos: { id: string; url: string; altText?: string | null }[]
 }
@@ -98,6 +101,10 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
       metaDescription: deal?.metaDescription ?? '',
       linkUrl: deal?.linkUrl ?? '',
       linkLabel: deal?.linkLabel ?? '',
+      sourceUrl: deal?.sourceUrl ?? '',
+      recheckAt: deal?.recheckAt
+        ? deal.recheckAt.toLocaleDateString('en-CA', { timeZone: 'America/Detroit' })
+        : (() => { const d = new Date(); d.setDate(d.getDate() + 90); return d.toLocaleDateString('en-CA', { timeZone: 'America/Detroit' }) })(),
     },
   })
 
@@ -121,6 +128,7 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
         tags,
         startDate: data.startDate ? new Date(data.startDate + 'T00:00:00') : undefined,
         endDate: data.endDate ? new Date(data.endDate + 'T23:59:59') : undefined,
+        recheckAt: data.recheckAt ? new Date(data.recheckAt + 'T00:00:00') : undefined,
         photoUrls: pendingPhotoUrls.length ? pendingPhotoUrls : undefined,
       })
       router.push(`/admin/deals/${created.id}`)
@@ -139,6 +147,8 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
         metaDescription: data.metaDescription || null,
         linkUrl: data.linkUrl || null,
         linkLabel: data.linkLabel || null,
+        sourceUrl: data.sourceUrl || null,
+        recheckAt: data.recheckAt ? new Date(data.recheckAt + 'T00:00:00') : null,
       })
       router.refresh()
     }
@@ -408,6 +418,10 @@ export function AdminDealEditor({ deal, categories, dealTypes, neighborhoods, is
         {/* Admin notes */}
         <Section title="Admin Notes">
           <Textarea label="Internal notes (not public)" rows={2} placeholder="Moderation notes, reason for rejection, etc." {...register('adminNotes')} />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input label="Source URL" placeholder="https://... (optional)" {...register('sourceUrl')} />
+            <Input label="Recheck Date" type="date" {...register('recheckAt')} />
+          </div>
         </Section>
 
         {(createDeal.error || updateDeal.error) && (
