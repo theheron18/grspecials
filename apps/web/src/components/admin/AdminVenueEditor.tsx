@@ -35,6 +35,7 @@ const schema = z.object({
   autoApprove: z.boolean(),
   metaTitle: z.string().optional(),
   metaDescription: z.string().optional(),
+  adminNotes: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -46,7 +47,7 @@ interface Place {
   phone?: string | null; website?: string | null; facebook?: string | null; instagram?: string | null; email?: string | null
   latitude?: number | null; longitude?: number | null; neighborhood?: string | null
   categoryId: string; status: string; verified: boolean; premium: boolean; autoApprove: boolean
-  portalToken: string; logoUrl?: string | null; metaTitle?: string | null; metaDescription?: string | null
+  portalToken: string; logoUrl?: string | null; metaTitle?: string | null; metaDescription?: string | null; adminNotes?: string | null
   _count: { deals: number }
 }
 
@@ -89,6 +90,7 @@ export function AdminPlaceEditor({ place, categories, isNew }: Props) {
       autoApprove: place?.autoApprove ?? false,
       metaTitle: place?.metaTitle ?? '',
       metaDescription: place?.metaDescription ?? '',
+      adminNotes: place?.adminNotes ?? '',
     },
   })
 
@@ -128,7 +130,7 @@ export function AdminPlaceEditor({ place, categories, isNew }: Props) {
       const created = await createPlace.mutateAsync({ ...payload, logoUrl: logoUrl || undefined })
       router.push(`/admin/places/${created.id}`)
     } else {
-      await updatePlace.mutateAsync({ id: place!.id, ...payload, logoUrl: logoUrl || null })
+      await updatePlace.mutateAsync({ id: place!.id, ...payload, logoUrl: logoUrl || null, adminNotes: data.adminNotes || null })
       router.refresh()
     }
   }
@@ -266,6 +268,10 @@ export function AdminPlaceEditor({ place, categories, isNew }: Props) {
         <Section title="SEO">
           <Input label="Meta Title" {...register('metaTitle')} />
           <Textarea label="Meta Description" rows={2} {...register('metaDescription')} />
+        </Section>
+
+        <Section title="Admin Notes">
+          <Textarea label="Internal notes (not public)" rows={3} placeholder="Research notes, contact history, sourcing info, etc." {...register('adminNotes')} />
         </Section>
 
         {(createPlace.error || updatePlace.error) && (

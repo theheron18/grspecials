@@ -77,6 +77,7 @@ export const placesRouter = router({
           address: true,
           categoryId: true,
           lastResearchedAt: true,
+          adminNotes: true,
           _count: { select: { deals: { where: { status: 'ACTIVE' } } } },
         },
       })
@@ -86,6 +87,7 @@ export const placesRouter = router({
         address: v.address,
         categoryId: v.categoryId,
         lastResearchedAt: v.lastResearchedAt,
+        adminNotes: v.adminNotes,
         activeDealsCount: v._count.deals,
       }))
     }),
@@ -159,6 +161,7 @@ export const placesRouter = router({
         logoUrl: z.string().url().optional(),
         verified: z.boolean().optional().default(false),
         premium: z.boolean().optional().default(false),
+        adminNotes: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -193,6 +196,7 @@ export const placesRouter = router({
         metaTitle: z.string().optional().nullable(),
         metaDescription: z.string().optional().nullable(),
         lastResearchedAt: z.date().optional().nullable(),
+        adminNotes: z.string().optional().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

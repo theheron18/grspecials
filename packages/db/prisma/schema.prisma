@@ -208,6 +208,7 @@ model Venue {
   autoApprove Boolean     @default(false)
 
   lastResearchedAt DateTime?
+  adminNotes  String?   @db.Text
 
   categoryId  String
   category    VenueCategory @relation(fields: [categoryId], references: [id])

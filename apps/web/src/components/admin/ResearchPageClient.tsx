@@ -15,6 +15,7 @@ interface Place {
   address: string
   categoryId: string
   lastResearchedAt: Date | null
+  adminNotes: string | null
   activeDealsCount: number
 }
 
@@ -433,6 +434,9 @@ export function ResearchPageClient({
                         {place.activeDealsCount > 0 ? `${place.activeDealsCount} deals` : ''}
                       </span>
                     </label>
+                    {place.adminNotes && (
+                      <p className="mx-3 mb-1 truncate text-xs italic text-text-muted">{place.adminNotes}</p>
+                    )}
                     {recentAndHasDeals && (
                       <label className="mx-3 mb-1 flex cursor-pointer items-center gap-1.5 rounded bg-amber-50 px-2 py-1">
                         <input

@@ -7,6 +7,9 @@ import { getUpcomingEvents } from '@/lib/eventTags'
 import { FileText, Building2, ClipboardList, Bot, AlertCircle, CheckCircle, Clock, CalendarDays } from 'lucide-react'
 
 export default async function AdminDashboard() {
+  const staleThreshold = new Date()
+  staleThreshold.setDate(staleThreshold.getDate() + 7)
+
   const [
     activeDeals,
     pendingSubmissions,
@@ -14,6 +17,7 @@ export default async function AdminDashboard() {
     scraperSources,
     recentDeals,
     lastScrapeRun,
+    staleDeals,
   ] = await Promise.all([
     prisma.deal.count({ where: { status: 'ACTIVE' } }),
     prisma.deal.count({ where: { status: 'PENDING_REVIEW' } }),
@@ -25,6 +29,14 @@ export default async function AdminDashboard() {
       include: { venue: { select: { name: true } }, category: { select: { name: true, icon: true } } },
     }),
     prisma.scraperRun.findFirst({ orderBy: { startedAt: 'desc' } }),
+    prisma.deal.findMany({
+      where: {
+        recheckAt: { lte: staleThreshold },
+        status: { notIn: ['EXPIRED', 'ARCHIVED'] },
+      },
+      orderBy: { recheckAt: 'asc' },
+      select: { id: true, title: true, recheckAt: true, venue: { select: { name: true } } },
+    }),
   ])
 
   const upcomingEvents = await getUpcomingEvents(10)
@@ -83,6 +95,36 @@ export default async function AdminDashboard() {
           >
             Review Now
           </Link>
+        </div>
+      )}
+
+      {/* Stale deals warning */}
+      {staleDeals.length > 0 && (
+        <div className="rounded-card border border-amber-200 bg-amber-50 overflow-hidden">
+          <div className="flex items-center gap-2.5 px-4 py-3 border-b border-amber-200">
+            <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+            <p className="text-sm font-semibold text-amber-800">
+              {staleDeals.length} deal{staleDeals.length > 1 ? 's' : ''} need{staleDeals.length === 1 ? 's' : ''} a recheck
+            </p>
+          </div>
+          <ul className="divide-y divide-amber-100">
+            {staleDeals.map((deal) => (
+              <li key={deal.id} className="flex items-center justify-between gap-4 px-4 py-2.5">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-text-primary truncate">{deal.title}</p>
+                  <p className="text-xs text-text-muted">{deal.venue.name}</p>
+                </div>
+                <div className="shrink-0 flex items-center gap-3">
+                  <span className={`text-xs font-medium ${deal.recheckAt! < new Date() ? 'text-red-600' : 'text-amber-700'}`}>
+                    {deal.recheckAt!.toLocaleDateString('en-US', { timeZone: 'America/Detroit', month: 'short', day: 'numeric' })}
+                  </span>
+                  <Link href={`/admin/deals/${deal.id}`} className="text-xs text-brand-blue hover:underline whitespace-nowrap">
+                    Edit →
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
